@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mortal Kombat JS - Modular</title>
+    <!-- Подключаем внешние стили -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Интерфейс здоровья (UI) -->
+    <div id="ui">
+        <div class="health-bar-container">
+            <div id="p1-health" class="health-bar"></div>
+        </div>
+        <h2 id="vs-title">VS</h2>
+        <div class="health-bar-container">
+            <div id="p2-health" class="health-bar"></div>
+        </div>
+    </div>
+
+    <!-- Игровой холст -->
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    
+    <!-- Текст комбо-ударов -->
+    <div id="combo-log"></div>
+
+    <!-- Инструкция по управлению -->
+    <div id="controls-info">
+        <strong>Игрок 1:</strong> A/D — Бег, W — Прыжок, S — Присесть, Пробел — Удар.<br>
+        <strong>Игрок 2:</strong> Стрелки — Движение, Enter — Удар.
+    </div>
+
+    <!-- Подключаем игровой скрипт (в самом конце body) -->
+    <script src="game.js"></script>
+</body>
+</html>
