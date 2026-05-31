@@ -121,11 +121,6 @@ header {
 /* ==========================================================================
    СТИЛИ ДЛЯ ДИНАМИЧЕСКИХ ВКЛАДОК И ПОИСКА
    ========================================================================== */
-.tab-content {
-    display: none;
-    opacity: 0;
-    transition: opacity 0.4s ease-in-out;
-}
 
 .tab-content.active-tab {
     display: block;
@@ -874,3 +869,194 @@ footer {
     box-shadow: 0 0 10px #e81123;
     transform: scale(1.05);
 }
+
+/* Кнопка изменения данных в таблице админа */
+.admin-edit-btn {
+    background-color: #f37321; /* Фирменный оранжевый акцент */
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-right: 5px;
+}
+
+.admin-edit-btn:hover {
+    background-color: #ff8432;
+    box-shadow: 0 0 10px #f37321;
+    transform: scale(1.05);
+}
+
+/* ==========================================================================
+   ИСПРАВЛЕНИЯ ДЛЯ ПОСЛЕДОВАТЕЛЬНОГО СКРОЛЛА (LANDING PAGE)
+   ========================================================================== */
+
+/* Включаем плавную анимацию прокрутки для всей страницы */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Переопределяем старые скрытые вкладки — теперь все секции видны всегда */
+.tab-content {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transition: none !important;
+}
+
+/* Оформляем новые сквозные блоки страниц */
+.page-section {
+    display: block;
+    padding: 60px 0 20px; /* Отступы сверху для компенсации фиксированной шапки */
+    border-bottom: 1px solid #141414;
+}
+
+/* Зеленое неоновое свечение для активной ссылки меню при прокрутке */
+.nav-menu a.active-scroll-link {
+    color: #107c10 !important;
+    text-shadow: 0 0 8px rgba(16, 124, 16, 0.8);
+    border-bottom: 2px solid #107c10;
+}
+
+/* Гарантируем, что блок корзины растягивается под любое количество товаров */
+.cart-card {
+    height: auto !important;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* ==========================================================================
+   ЖЕЛЕЗОБЕТОННЫЙ ФИКС ОТОБРАЖЕНИЯ КОРЗИНЫ НА ПК И СМАРТФОНАХ
+   ========================================================================== */
+
+/* Настройка сетки личного кабинета */
+.profile-card-layout {
+    display: grid !important;
+    grid-template-columns: 1.2fr 1fr !important; /* Две колонки на ПК */
+    gap: 32px !important;
+    align-items: start !important;
+}
+
+/* Адаптивность сетки под мобилки */
+@media (max-width: 992px) {
+    .profile-card-layout {
+        grid-template-columns: 1fr !important; /* Одна колонка на смартфонах */
+        gap: 20px !important;
+    }
+}
+
+/* Сама карточка корзины */
+.cart-card {
+    background-color: #141414 !important;
+    border: 1px solid #107c10 !important;
+    border-radius: 4px !important;
+    padding: 24px !important;
+    box-shadow: 0 0 15px rgba(16, 124, 16, 0.15) !important;
+    
+    /* Эти свойства гарантируют видимость кнопки при любом количестве товаров */
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important; 
+    min-height: 250px !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Обертка для кнопки и суммы */
+.cart-footer-wrapper {
+    margin-top: auto !important; /* Прижимает блок к самому низу корзины */
+    padding-top: 15px !important;
+}
+
+/* Принудительный показ кнопки "Оформить заказ" */
+#checkout-btn {
+    background-color: #107c10 !important;
+    color: #fff !important;
+    padding: 12px 20px !important;
+    font-weight: 700 !important;
+    border-radius: 4px !important;
+    margin-top: 12px !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+}
+
+#checkout-btn:hover {
+    background-color: #149b14 !important;
+    box-shadow: 0 0 12px #107c10 !important;
+}
+
+/* ==========================================================================
+   СНЯТИЕ ОГРАНИЧЕНИЙ ПО ВЫСОТЕ ЛИЧНОГО КАБИНЕТА
+   ========================================================================== */
+
+/* Снимаем ограничения с самой секции ЛК */
+#user-profile-section, 
+.profile-section {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important; /* Разрешаем контенту выходить наружу и тянуть страницу */
+}
+
+/* Снимаем ограничения с контейнера внутри секции */
+.profile-container {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding-bottom: 40px !important; /* Добавляем отступ снизу для красоты */
+}
+
+/* Гарантируем, что общая обертка макета тоже не зажата по высоте */
+.profile-card-layout {
+    height: auto !important;
+    max-height: none !important;
+}
+
+/* ==========================================================================
+   АДАПТИВНОЕ МЕНЮ: ПОДСТРОЙКА КНОПОК ПОД ПОИСК
+   ========================================================================== */
+@media (max-width: 768px) {
+    /* Делаем правую часть шапки вертикальным флекс-боксом внутри гамбургера */
+    .nav-right {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 15px !important;
+        width: 100% !important;
+        margin-top: 20px !important;
+        padding: 0 10px !important;
+    }
+
+    /* Растягиваем контейнер поиска на всю ширину */
+    .search-container {
+        width: 100% !important;
+        max-width: 300px !important;
+    }
+
+    .xbox-search-input {
+        width: 100% !important;
+    }
+
+    /* Стилизуем кнопку Профиль для мобильного меню */
+    .profile-btn {
+        width: 100% !important;
+        max-width: 300px !important;
+        margin-right: 0 !important; /* Убираем старый ПК отступ */
+        text-align: center !important;
+        padding: 10px 0 !important;
+    }
+
+    /* Стилизуем ссылку Выйти под Профилем */
+    .nav-menu .logout-btn {
+        width: 100% !important;
+        max-width: 300px !important;
+        text-align: center !important;
+        padding: 10px 0 !important;
+    }
+}
+

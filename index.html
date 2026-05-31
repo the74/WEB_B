@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xbox – Официальный сайт (Демо)</title>
+    <title>GameZ – Официальный сайт (Демо)</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,8 +12,8 @@
     <header>
         <div class="nav-container">
             <a href="#" class="logo" id="logo-home">
-                <div class="logo-icon">X</div>
-                Xbox
+                <div class="logo-icon">Z</div>
+                GameZ
             </a>
             
             <button class="hamburger" id="hamburger" type="button" aria-label="Открыть меню">
@@ -24,13 +24,12 @@
 
             <nav class="nav-menu" id="nav-menu">
                 <div class="nav-links-left">
-                    <a href="#" class="tab-link" data-tab="consoles">Консоли</a>
-                    <a href="#" class="tab-link" data-tab="games">Игры</a>
-                    <a href="#" class="tab-link" data-tab="gamepass">Game Pass</a>
-                    <a href="#" class="tab-link" data-tab="accessories">Аксессуары</a>
-                    <a href="#" class="tab-link" data-tab="shop">Магазин</a>
-                    <a href="#" class="tab-link" data-tab="admin">Админка</a>
-
+                    <a href="#section-consoles" class="scroll-link">Консоли</a>
+                    <a href="#section-games" class="scroll-link">Игры</a>
+                    <a href="#section-gamepass" class="scroll-link">Game Pass</a>
+                    <a href="#section-accessories" class="scroll-link">Аксессуары</a>
+                    <a href="#section-shop" class="scroll-link">Магазин</a>
+                    <a href="#section-admin" class="scroll-link" id="admin-menu-link" style="display: none;">Админка</a>
                 </div>
                 
                 <div class="nav-right">
@@ -47,9 +46,8 @@
     <!-- БЛОК ЛИЧНОГО КАБИНЕТА С КОРЗИНОЙ -->
     <section id="user-profile-section" class="profile-section">
         <div class="profile-container">
-            <h2>Личный кабинет пользователя</h2>
+            <h2>Личный кабинет пользователя GameZ</h2>
             <div class="profile-card-layout">
-                <!-- Данные профиля -->
                 <div class="profile-card">
                     <div class="profile-avatar">👤</div>
                     <div class="profile-info">
@@ -69,96 +67,85 @@
                     </div>
                 </div>
 
-                <!-- КОРЗИНА ВНУТРИ ЛИЧНОГО КАБИНЕТА -->
                 <div class="cart-card">
                     <h3>🛒 Ваша корзина</h3>
                     <div id="cart-items-container">
                         <p class="empty-cart-text">Корзина пуста. Перейдите в Магазин для покупок.</p>
                     </div>
-                    <div class="cart-total-block">
-                        <span>Итого к оплате:</span>
-                        <strong id="cart-total-price">0 ₽</strong>
+                    <div class="cart-footer-wrapper">
+                        <div class="cart-total-block">
+                            <span>Итого к оплате:</span>
+                            <strong id="cart-total-price">0 ₽</strong>
+                        </div>
+                        <button id="checkout-btn" class="btn checkout-btn" style="width: 100%; display: none;">Оформить заказ</button>
                     </div>
-                    <button id="checkout-btn" class="btn checkout-btn" style="width: 100%; display: none;">Оформить заказ</button>
                 </div>
             </div>
         </div>
     </section>
 
-        <!-- ОБНОВЛЕННЫЙ ИГРОВОЙ СЛАЙДЕР (ВМЕСТО СТАТИЧНОГО БАННЕРА) -->
+    <!-- СЛАЙДЕР БАННЕРОВ -->
     <section class="slider-container">
         <div class="slider" id="xbox-slider">
-            
-            <!-- Слайд 1: Мир развлечений (Оригинальный видео-слайд) -->
             <div class="slide active-slide">
-                <video class="hero-video" autoplay loop muted playsinline>
-                    <source src="https://vimeo.com" type="video/mp4">
+                <video class="hero-video" autoplay loop muted playsinline poster="https://placehold.co/1920x1080/107c10/white?text=GameZ">
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4">
                 </video>
                 <div class="hero-content">
-                    <h1>Мир развлечений Xbox</h1>
+                    <h1>Мир развлечений GameZ</h1>
                     <p>Исследуйте новое поколение игр. Оцените невероятную графику, мгновенную загрузку и сотни игровых миров.</p>
-                    <a href="#" class="btn">Купить сейчас</a>
+                    <a href="#section-shop" class="btn scroll-link">Купить сейчас</a>
                 </div>
             </div>
-
-            <!-- Слайд 2: Xbox Game Pass (Фото-слайд) -->
             <div class="slide">
-                <div class="slide-bg-img" style="background-image: url('https://unsplash.com');"></div>
+                <div class="slide-bg-img" style="background-image: url('https://placehold.co/1920x1080/0a0a0a/107c10?text=GameZ+Pass');"></div>
                 <div class="hero-content">
-                    <h1>Xbox Game Pass Ultimate</h1>
+                    <h1>GameZ Pass Ultimate</h1>
                     <p>Играйте в сотни высококачественных игр на консоли и ПК. Новые культовые релизы доступны в первый же день.</p>
-                    <a href="#" class="btn tab-link" data-tab="gamepass">Подробнее</a>
+                    <a href="#section-gamepass" class="btn scroll-link">Подробнее</a>
                 </div>
             </div>
-
-            <!-- Слайд 3: Аксессуары (Фото-слайд) -->
             <div class="slide">
-                <div class="slide-bg-img" style="background-image: url('https://unsplash.com');"></div>
+                <div class="slide-bg-img" style="background-image: url('https://placehold.co/1920x1080/0a0a0a/107c10?text=GameZ+Accessories');"></div>
                 <div class="hero-content">
                     <h1>Прокачай свой сетап</h1>
                     <p>Уникальные беспроводные геймпады, гарнитуры и зарядные станции. Найдите свой идеальный стиль управления.</p>
-                    <a href="#" class="btn tab-link" data-tab="accessories">Смотреть аксессуары</a>
+                    <a href="#section-accessories" class="btn scroll-link">Смотреть аксессуары</a>
                 </div>
             </div>
-
         </div>
-
-        <!-- Кнопки управления слайдером -->
-        <button class="slider-arrow prev-arrow" id="slider-prev" aria-label="Назад">&#10094;</button>
-        <button class="slider-arrow next-arrow" id="slider-next" aria-label="Вперед">&#10095;</button>
-
-        <!-- Точки-индикаторы внизу -->
+        <button class="slider-arrow prev-arrow" id="slider-prev">&#10094;</button>
+        <button class="slider-arrow next-arrow" id="slider-next">&#10095;</button>
         <div class="slider-dots" id="slider-dots">
             <span class="dot active-dot" data-index="0"></span>
             <span class="dot" data-index="1"></span>
             <span class="dot" data-index="2"></span>
         </div>
     </section>
-
-    <!-- ВКЛАДКИ КОНТЕНТА -->
-    <!-- Вкладка: КОНСОЛИ -->
-    <section id="tab-consoles" class="tab-content active-tab">
+    
+    <!-- Раздел: КОНСОЛИ -->
+    <section id="section-consoles" class="page-section">
         <h2 class="tab-title">Игровые консоли нового поколения</h2>
         <div class="products">
             <div class="card anim-fade visible">
                 <div class="card-img">
-                    <img src="https://unsplash.com" alt="Xbox Series X">
+                    <img src="https://placehold.co/600x400/0a0a0a/107c10?text=GameZ+Series+X" alt="GameZ Series X">
                 </div>
                 <div class="card-body">
                     <div>
-                        <h3>Xbox Series X</h3>
-                        <p>Самая быстрая и мощная консоль Xbox в истории с поддержкой истинного разрешения 4K.</p>
+                        <h3>GameZ Series X</h3>
+                        <p>Самая быстрая и мощная консоль GameZ в истории с поддержкой истинного разрешения 4K.</p>
                     </div>
                     <span class="card-btn">Подробнее</span>
                 </div>
             </div>
             <div class="card anim-fade visible">
                 <div class="card-img">
-                    <img src="https://unsplash.com" alt="Xbox Series S">
+                    <img src="https://placehold.co/600x400/0a0a0a/107c10?text=GameZ+Series+S" alt="GameZ Series S">
                 </div>
                 <div class="card-body">
                     <div>
-                        <h3>Xbox Series S</h3>
+                        <h3>GameZ Series S</h3>
                         <p>Полностью цифровая консоль следующего поколения по доступной цене в самом компактном корпусе.</p>
                     </div>
                     <span class="card-btn">Подробнее</span>
@@ -167,13 +154,13 @@
         </div>
     </section>
 
-    <!-- Вкладка: ИГРЫ -->
-    <section id="tab-games" class="tab-content">
+    <!-- Раздел: ИГРЫ -->
+    <section id="section-games" class="page-section">
         <h2 class="tab-title">Культовые блокбастеры и новинки</h2>
         <div class="products">
             <div class="card anim-fade visible">
                 <div class="card-img">
-                    <img src="https://unsplash.com" alt="Halo Infinite">
+                    <img src="https://placehold.co/600x400/0a0a0a/107c10?text=Halo+Infinite" alt="Halo Infinite">
                 </div>
                 <div class="card-body">
                     <div>
@@ -185,7 +172,7 @@
             </div>
             <div class="card anim-fade visible">
                 <div class="card-img">
-                    <img src="https://unsplash.com" alt="Forza Motorsport">
+                    <img src="https://placehold.co/600x400/0a0a0a/107c10?text=Forza+Motorsport" alt="Forza Motorsport">
                 </div>
                 <div class="card-body">
                     <div>
@@ -195,20 +182,32 @@
                     <span class="card-btn">Смотреть</span>
                 </div>
             </div>
-        </div>
-    </section>
-
-    <!-- Вкладка: GAME PASS -->
-    <section id="tab-gamepass" class="tab-content">
-        <h2 class="tab-title">Подписка Xbox Game Pass Ultimate</h2>
-        <div class="products">
             <div class="card anim-fade visible">
                 <div class="card-img">
-                    <img src="https://unsplash.com" alt="Game Pass">
+                    <img src="https://placehold.co/600x400/0a0a0a/ffd700?text=Checkers" alt="Шашки GameZ">
                 </div>
                 <div class="card-body">
                     <div>
-                        <h3>Каталог Game Pass Ultimate</h3>
+                        <h3>Шашки GameZ</h3>
+                        <p>Классическая игра в шашки с интеллектуальным компьютером. Развивайте стратегию и тактику!</p>
+                    </div>
+                    <a href="Game/checkers/index.html" class="card-btn" style="text-decoration: none; display: inline-block;">🎮 Играть бесплатно</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Раздел: GAME PASS -->
+    <section id="section-gamepass" class="page-section">
+        <h2 class="tab-title">Подписка GameZ Pass Ultimate</h2>
+        <div class="products">
+            <div class="card anim-fade visible">
+                <div class="card-img">
+                    <img src="https://placehold.co/600x400/0a0a0a/107c10?text=GameZ+Pass" alt="GameZ Pass">
+                </div>
+                <div class="card-body">
+                    <div>
+                        <h3>Каталог GameZ Pass Ultimate</h3>
                         <p>Сотни высококачественных игр для консоли и ПК, доступных сразу в день релиза за одну подписку.</p>
                     </div>
                     <span class="card-btn">Купить подписку</span>
@@ -217,17 +216,17 @@
         </div>
     </section>
 
-    <!-- Вкладка: АКСЕССУАРЫ -->
-    <section id="tab-accessories" class="tab-content">
+    <!-- Раздел: АКСЕССУАРЫ -->
+    <section id="section-accessories" class="page-section">
         <h2 class="tab-title">Беспроводные геймпады и гарнитуры</h2>
         <div class="products">
             <div class="card anim-fade visible">
                 <div class="card-img">
-                    <img src="https://unsplash.com" alt="Controllers">
+                    <img src="https://placehold.co/600x400/0a0a0a/107c10?text=GameZ+Controller" alt="Controllers">
                 </div>
                 <div class="card-body">
                     <div>
-                        <h3>Геймпады Xbox Wireless</h3>
+                        <h3>Геймпады GameZ Wireless</h3>
                         <p>Оцените текстурированные поверхности, измененную геометрию и гибридную крестовину.</p>
                     </div>
                     <span class="card-btn">Выбрать стиль</span>
@@ -236,30 +235,27 @@
         </div>
     </section>
 
-    <!-- НОВАЯ ПОЛНОЦЕННАЯ ВКЛАДКА: МАГАЗИН С ЦЕНАМИ И КНОПКАМИ ДОБАВЛЕНИЯ -->
-    <section id="tab-shop" class="tab-content">
-        <h2 class="tab-title">Цифровой магазин игр Xbox</h2>
+    <!-- Раздел: МАГАЗИН -->
+    <section id="section-shop" class="page-section">
+        <h2 class="tab-title">Цифровой магазин игр GameZ</h2>
         <div class="products">
-                        <!-- Исправленный Товар 1 в магазине -->
-            <div class="card shop-product-card" data-id="1" data-name="S.T.A.L.K.E.R. 2: Сердце Чернобыля" data-price="2499">
+            <div class="card shop-product-card" data-id="1" data-name="Шашки - Классическая стратегия" data-price="0">
                 <div class="card-img">
-                    <img src="https://unsplash.com" alt="Stalker 2">
+                    <img src="https://placehold.co/600x400/0a0a0a/ffd700?text=Checkers" alt="Checkers Game">
                 </div>
                 <div class="card-body">
                     <div>
-                        <h3>S.T.A.L.K.E.R. 2</h3>
-                        <p>Исследуйте Чернобыльскую зону отчуждения, полную опасных мутантов и смертоносных аномалий.</p>
-                        <div class="product-price-tag">2 499 ₽</div>
+                        <h3>Шашки - Классическая стратегия</h3>
+                        <p>Классическая игра в шашки с интеллектуальным компьютерным соперником. Развивайте стратегическое мышление!</p>
+                        <div class="product-price-tag" style="color: #ffd700;">БЕСПЛАТНО!</div>
                     </div>
                     <button class="card-btn add-to-cart-btn">В корзину</button>
                 </div>
             </div>
 
-
-            <!-- Товар 2 -->
             <div class="card shop-product-card" data-id="2" data-name="Cyberpunk 2077: Phantom Liberty" data-price="1999">
                 <div class="card-img">
-                    <img src="https://unsplash.com" alt="Cyberpunk">
+                    <img src="https://placehold.co/600x400/0a0a0a/107c10?text=Cyberpunk+2077" alt="Cyberpunk 2077">
                 </div>
                 <div class="card-body">
                     <div>
@@ -271,10 +267,9 @@
                 </div>
             </div>
 
-            <!-- Товар 3 -->
             <div class="card shop-product-card" data-id="3" data-name="Elden Ring: Shadow of the Erdtree" data-price="2999">
                 <div class="card-img">
-                    <img src="https://unsplash.com" alt="Elden Ring">
+                    <img src="https://placehold.co/600x400/0a0a0a/107c10?text=Elden+Ring" alt="Elden Ring">
                 </div>
                 <div class="card-body">
                     <div>
@@ -288,10 +283,9 @@
         </div>
     </section>
 
-    <!-- Вкладка: АДМИН-ПАНЕЛЬ (УПРАВЛЕНИЕ SQL ТАБЛИЦЕЙ) -->
-    <section id="tab-admin" class="tab-content">
-        <h2 class="tab-title">Управление базой данных SQL (SQLite)</h2>
-        
+    <!-- Раздел: АДМИН-ПАНЕЛЬ -->
+    <section id="section-admin" class="page-section" style="display: none;">
+        <h2 class="tab-title">Управление базой данных SQL (SQLite3)</h2>
         <div class="admin-table-container">
             <table class="admin-table">
                 <thead>
@@ -307,28 +301,26 @@
                     </tr>
                 </thead>
                 <tbody id="admin-table-body">
-                    <!-- Сюда JavaScript будет динамически подгружать строки из SQL -->
+                    <tr><td colspan="8" style="text-align: center;">Загрузка данных...</td></tr>
                 </tbody>
             </table>
         </div>
     </section>
 
-
     <!-- Футер -->
     <footer>
-        <p>© Xbox Microsoft 2026. Демонстрационный игровой концепт фан-страницы.</p>
+        <p>© GameZ 2026. Демонстрационный игровой концепт фан-страницы.</p>
     </footer>
 
     <!-- МОДАЛЬНОЕ ОКНО (ВХОД И РЕГИСТРАЦИЯ) -->
     <div class="modal-overlay" id="login-modal">
         <div class="modal-box">
             <button class="modal-close" id="modal-close" aria-label="Закрыть">&times;</button>
-            <div class="modal-logo"><div class="logo-icon">X</div> Xbox</div>
+            <div class="modal-logo"><div class="logo-icon">Z</div> GameZ</div>
 
-            <!-- БЛОК ВХОДА -->
             <div id="auth-login-block">
                 <h2>Вход</h2>
-                <p class="modal-subtitle">Используйте учетную запись Xbox Live</p>
+                <p class="modal-subtitle">Используйте учетную запись GameZ Live</p>
 
                 <form id="login-form" novalidate>
                     <div class="input-group">
@@ -342,14 +334,13 @@
                         <span class="password-toggle" id="toggle-login-password">👁</span>
                         <span class="error-message" id="login-password-error"></span>
                     </div>
-                    <div class="modal-links"><a href="#" id="go-to-register">Создать учетную запись Xbox</a></div>
+                    <div class="modal-links"><a href="#" id="go-to-register">Создать учетную запись GameZ</a></div>
                     <button type="submit" class="btn modal-submit-btn">Далее</button>
                 </form>
             </div>
 
-            <!-- БЛОК РЕГИСТРАЦИИ -->
             <div id="auth-register-block" style="display: none;">
-                <h2>Registration</h2>
+                <h2>Регистрация</h2>
                 <p class="modal-subtitle">Заполните анкету игрового профиля</p>
 
                 <form id="register-form" novalidate>
@@ -367,6 +358,9 @@
                     <div class="input-group">
                         <input type="tel" id="reg-phone" required placeholder=" ">
                         <label for="reg-phone">Номер телефона</label>
+                        <small style="color: #888; font-size: 11px; display: block; margin-top: 5px;">
+                            📱 Пример: +7 (912) 345-67-89
+                        </small>
                         <span class="error-message" id="reg-phone-error"></span>
                     </div>
                     <div class="input-group">
@@ -385,7 +379,6 @@
                         <span class="error-message" id="reg-lang-error"></span>
                     </div>
 
-                    <!-- Выбор пола -->
                     <div class="radio-group-container">
                         <label class="radio-main-label">Пол:</label>
                         <div class="radio-options">
@@ -422,8 +415,58 @@
         </div>
     </div>
 
-    <!-- ПОДКЛЮЧЕНИЕ ВНЕШНЕГО СТАТИЧНОГО СКРИПТА -->
+    <!-- МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ ДЛЯ АДМИНИСТРАТОРА -->
+    <div class="modal-overlay" id="admin-edit-modal">
+        <div class="modal-box">
+            <button class="modal-close" id="admin-modal-close">&times;</button>
+            <div class="modal-logo"><div class="logo-icon">Z</div> GameZ Admin</div>
+            <h2>Редактирование профиля</h2>
+            <p class="modal-subtitle">Изменение данных в базе SQLite3</p>
+
+            <form id="admin-edit-form" novalidate>
+                <input type="hidden" id="admin-edit-id">
+                
+                <div class="input-group">
+                    <input type="tel" id="admin-edit-phone" required placeholder=" ">
+                    <label for="admin-edit-phone">Номер телефона</label>
+                </div>
+                <div class="input-group">
+                    <input type="date" id="admin-edit-date" required>
+                    <label for="admin-edit-date" class="static-label">Дата рождения</label>
+                </div>
+                <div class="input-group">
+                    <select id="admin-edit-lang" required>
+                        <option value="JavaScript">JavaScript</option>
+                        <option value="C#">C# / .NET</option>
+                        <option value="Python">Python</option>
+                    </select>
+                    <label for="admin-edit-lang">Язык программирования</label>
+                </div>
+                <div class="input-group">
+                    <select id="admin-edit-role" required>
+                        <option value="user">User (Игрок)</option>
+                        <option value="admin">Admin (Администратор)</option>
+                    </select>
+                    <label for="admin-edit-role">Роль пользователя</label>
+                </div>
+                <div class="radio-group-container">
+                    <label class="radio-main-label">Пол:</label>
+                    <div class="radio-options">
+                        <div class="radio-item"><input type="radio" id="admin-gender-male" name="admin-gender" value="Мужской"><label for="admin-gender-male">Мужской</label></div>
+                        <div class="radio-item"><input type="radio" id="admin-gender-female" name="admin-gender" value="Женский"><label for="admin-gender-female">Женский</label></div>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <textarea id="admin-edit-bio" required placeholder=" " rows="2"></textarea>
+                    <label for="admin-edit-bio">Биография</label>
+                </div>
+
+                <button type="submit" class="btn modal-submit-btn">Сохранить</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
-
