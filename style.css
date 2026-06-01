@@ -1283,3 +1283,32 @@ html { scroll-behavior: smooth; }
     object-fit: cover;
     z-index: 1;
 }
+/* цвета для select */
+.input-group select {
+    width: 100%;
+    padding: 10px 0;
+    font-size: 15px;
+    border: none;
+    border-bottom: 1px solid #444;
+    outline: none;
+    background: transparent;
+    color: #fff;  /* Белый текст для выбранного значения */
+    transition: border-color 0.2s;
+}
+
+/* Цвет для option внутри select */
+.input-group select option {
+    background-color: #141414;  
+    color: #fff;                 
+}
+
+/* При фокусе на select */
+.input-group select:focus {
+    border-bottom: 2px solid #107c10;
+}
+
+/* Цвет для выбранного option */
+.input-group select option:checked {
+    background-color: #107c10;
+    color: #fff;
+}

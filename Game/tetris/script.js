@@ -113,7 +113,7 @@ async function loadUserBestScore() {
     if (!currentUserEmail) return;
     
     try {
-        const response = await fetch(`/api.php?action=get_tetris_score&email=${currentUserEmail}`);
+        const response = await fetch(`../../api.php?action=${currentUserEmail}`);
         const result = await response.json();
         
         if (result.success) {
@@ -130,7 +130,7 @@ async function saveScoreToServer(finalScore, finalLevel, finalLines) {
     if (finalScore <= personalBest) return;
     
     try {
-        const response = await fetch('/api.php?action=save_tetris_score', {
+        const response = await fetch('../../api.php?action=save_tetris_score', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -528,7 +528,7 @@ function handleKeyDown(e) {
 
 // Кнопка назад
 function goBack() {
-    window.location.href = '../../index.html';
+    window.location.href = '/w3/';
 }
 
 // Event listeners

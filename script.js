@@ -251,37 +251,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function validateRussianPhone(phone) {
-        const cleanPhone = phone.replace(/[\s\-\(\)\_]/g, '');
-        const phonePattern = /^(\+7|8|7)?(\d{10})$/;
-        const match = cleanPhone.match(phonePattern);
-        
-        if (!match) return false;
-        if (match[2] && match[2].length === 10 && !match[1]) return true;
-        
-        const hasPrefix = match[1] === '+7' || match[1] === '8' || match[1] === '7';
-        const hasElevenDigits = match[2] && match[2].length === 11;
-        
-        if (hasPrefix && hasElevenDigits) return true;
-        if (match[2] && match[2].length === 11 && !match[1]) return true;
-        
+        // Оставляем только цифры
+        const digits = phone.replace(/\D/g, '');
+
+        // Российский номер должен содержать 10 или 11 цифр
+        if (digits.length === 11) {
+            // Проверяем что начинается на 7 или 8
+            return digits[0] === '7' || digits[0] === '8';
+        }
+        if (digits.length === 10) {
+            return true; // 10 цифр - тоже подходит
+        }
+
         return false;
     }
 
     function formatRussianPhone(phone) {
-        const cleanPhone = phone.replace(/[\s\-\(\)\_]/g, '');
-        
-        if (/^\d{10}$/.test(cleanPhone)) {
-            return `+7 (${cleanPhone.slice(0,3)}) ${cleanPhone.slice(3,6)}-${cleanPhone.slice(6,8)}-${cleanPhone.slice(8,10)}`;
+        // Оставляем только цифры
+        let digits = phone.replace(/\D/g, '');
+
+        // Если 10 цифр, добавляем 7 в начало
+        if (digits.length === 10) {
+            digits = '7' + digits;
         }
-        if (/^\d{11}$/.test(cleanPhone)) {
-            return `+${cleanPhone.slice(0,1)} (${cleanPhone.slice(1,4)}) ${cleanPhone.slice(4,7)}-${cleanPhone.slice(7,9)}-${cleanPhone.slice(9,11)}`;
+
+        // Если начинается с 8, меняем на 7
+        if (digits.length === 11 && digits[0] === '8') {
+            digits = '7' + digits.slice(1);
         }
-        if (/^8\d{10}$/.test(cleanPhone)) {
-            return `+7 (${cleanPhone.slice(1,4)}) ${cleanPhone.slice(4,7)}-${cleanPhone.slice(7,9)}-${cleanPhone.slice(9,11)}`;
+
+        // Форматируем: +7 (XXX) XXX-XX-XX
+        if (digits.length === 11 && digits[0] === '7') {
+            return `+7 (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7, 9)}-${digits.slice(9, 11)}`;
         }
-        if (/^\+7\d{10}$/.test(cleanPhone)) {
-            return `+7 (${cleanPhone.slice(2,5)}) ${cleanPhone.slice(5,8)}-${cleanPhone.slice(8,10)}-${cleanPhone.slice(10,12)}`;
-        }
+
         return phone;
     }
 

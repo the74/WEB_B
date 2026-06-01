@@ -304,13 +304,20 @@ function getAllValidMoves(color) {
 
 async function apiRequest(action, data = {}) {
     data.email = currentUserEmail;
-    
+
     try {
-        const response = await fetch(`/api.php?action=${action}`, {
+        const response = await fetch(`/w3/api.php?action=${action}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
+
+        if (!response.ok) {
+            console.error('HTTP error:', response.status);
+            showToast(`Ошибка сервера: ${response.status}`);
+            return null;
+        }
+
         const result = await response.json();
         console.log('API Response:', action, result);
         return result;
@@ -323,9 +330,17 @@ async function apiRequest(action, data = {}) {
 
 async function apiGet(action, params = {}) {
     try {
-        const url = new URL(`/api.php?action=${action}`, window.location.origin);
+        const url = new URL(`/w3/api.php?action=${action}`, window.location.origin);
         Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
+        console.log('API GET URL:', url.toString());
+
         const response = await fetch(url);
+
+        if (!response.ok) {
+            console.error('HTTP error:', response.status);
+            return null;
+        }
+
         const result = await response.json();
         console.log('API GET Response:', action, result);
         return result;
@@ -334,7 +349,6 @@ async function apiGet(action, params = {}) {
         return null;
     }
 }
-
 // ==========================================================================
 // ИГРОВАЯ ЛОГИКА
 // ==========================================================================
@@ -690,7 +704,7 @@ function disconnect() {
 
 function goBack() {
     disconnect();
-    window.location.href = '/';
+    window.location.href = '/w3/';
 }
 
 async function startNewGame() {

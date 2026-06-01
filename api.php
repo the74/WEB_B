@@ -1,5 +1,5 @@
 <?php
-// Принудительно отключаем вывод ошибок в тело страницы, чтобы не ломать JSON-пакеты
+// Принудительно отключаем вывод ошибок в тело страницы
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
@@ -12,68 +12,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
 
-// ПУТЬ К БАЗЕ ДАННЫХ: Файл базы данных SQL в папке вашего проекта
-$dbPath = '/home/u82458/www/w3/gamez_store.db';
+// ==========================================================================
+// НАСТРОЙКИ ПОДКЛЮЧЕНИЯ К MYSQL
+// ==========================================================================
+$db_host = 'localhost';
+$db_user = 'u82458';      
+$db_pass = '1626939';         
+$db_name = 'u82458';       
 
 try {
-    $db = new SQLite3($dbPath);
-} catch (Exception $e) {
+    $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8", $db_user, $db_pass);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
     http_response_code(500);
-    echo json_encode(["error" => "db_init_error", "message" => "Не удалось запустить базу данных: " . $e->getMessage()]);
+    echo json_encode(["error" => "db_init_error", "message" => "Не удалось подключиться к базе данных: " . $e->getMessage()]);
     exit;
 }
 
-// Автоматически создаем таблицу пользователей с колонкой 'role' и рекордами
-$db->exec("CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT NOT NULL UNIQUE,
-    password TEXT NOT NULL,
-    phone TEXT NOT NULL,
-    birth_date TEXT NOT NULL,
-    prog_lang TEXT NOT NULL,
-    gender TEXT NOT NULL,
+// ==========================================================================
+// СОЗДАНИЕ ТАБЛИЦ (ЕСЛИ ИХ НЕТ)
+// ==========================================================================
+
+// Таблица пользователей
+$pdo->exec("CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    phone VARCHAR(50) NOT NULL,
+    birth_date DATE NOT NULL,
+    prog_lang VARCHAR(50) NOT NULL,
+    gender VARCHAR(20) NOT NULL,
     bio TEXT,
-    role TEXT NOT NULL DEFAULT 'user',
-    tetris_score INTEGER DEFAULT 0,
-    tetris_level INTEGER DEFAULT 0,
-    tetris_lines INTEGER DEFAULT 0,
-    checkers_wins INTEGER DEFAULT 0,
-    checkers_losses INTEGER DEFAULT 0
-)");
+    role VARCHAR(20) NOT NULL DEFAULT 'user',
+    tetris_score INT DEFAULT 0,
+    tetris_level INT DEFAULT 0,
+    tetris_lines INT DEFAULT 0,
+    checkers_wins INT DEFAULT 0,
+    checkers_losses INT DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-// Добавляем колонки если их нет (для существующей базы)
-$db->exec("ALTER TABLE users ADD COLUMN tetris_score INTEGER DEFAULT 0");
-$db->exec("ALTER TABLE users ADD COLUMN tetris_level INTEGER DEFAULT 0");
-$db->exec("ALTER TABLE users ADD COLUMN tetris_lines INTEGER DEFAULT 0");
-$db->exec("ALTER TABLE users ADD COLUMN checkers_wins INTEGER DEFAULT 0");
-$db->exec("ALTER TABLE users ADD COLUMN checkers_losses INTEGER DEFAULT 0");
+// Таблица для игровых комнат
+$pdo->exec("CREATE TABLE IF NOT EXISTS game_rooms (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    room_code VARCHAR(6) NOT NULL UNIQUE,
+    white_player VARCHAR(255),
+    black_player VARCHAR(255),
+    board LONGTEXT,
+    current_player VARCHAR(10) DEFAULT 'white',
+    status VARCHAR(20) DEFAULT 'waiting',
+    winner VARCHAR(10),
+    rematch_requested INT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-// Создаем таблицу для игровых комнат (сетевая игра в шашки)
-$db->exec("CREATE TABLE IF NOT EXISTS game_rooms (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    room_code TEXT NOT NULL UNIQUE,
-    white_player TEXT,
-    black_player TEXT,
-    board TEXT,
-    current_player TEXT DEFAULT 'white',
-    status TEXT DEFAULT 'waiting',
-    winner TEXT,
-    rematch_requested INTEGER,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-)");
+// Проверка и добавление колонки rematch_requested (если нет)
+try {
+    $pdo->exec("ALTER TABLE game_rooms ADD COLUMN rematch_requested INT DEFAULT NULL");
+} catch (PDOException $e) {
+    // Колонка уже существует - игнорируем ошибку
+}
 
-// Создаем главного админа GameZ, если его нет в базе данных SQL
-$checkAdmin = $db->querySingle("SELECT COUNT(*) FROM users WHERE email = 'admin@gamez.com'");
+// Создаем главного админа, если его нет
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE email = 'admin@gamez.com'");
+$stmt->execute();
+$checkAdmin = $stmt->fetchColumn();
+
 if (empty($checkAdmin) || $checkAdmin == 0) {
-    $db->exec("INSERT INTO users (email, password, phone, birth_date, prog_lang, gender, bio, role) 
-               VALUES ('admin@z.com', '12345678', '+79991112233', '1995-01-01', 'C#', 'Мужской', 'администратор.', 'admin')");
+    $stmt = $pdo->prepare("INSERT INTO users (email, password, phone, birth_date, prog_lang, gender, bio, role) 
+                           VALUES ('admin@gamez.com', 'admin777', '+79991112233', '1995-01-01', 'C#', 'Мужской', 'Главный администратор системы GameZ.', 'admin')");
+    $stmt->execute();
 }
 
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 $input = json_decode(file_get_contents('php://input'), true);
 
 // ==========================================================================
-// 1. РЕГИСТРАЦИЯ ПОЛЬЗОВАТЕЛЯ
+// 1. РЕГИСТРАЦИЯ
 // ==========================================================================
 if ($action === 'register' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = strtolower(trim($input['email']));
@@ -84,27 +98,27 @@ if ($action === 'register' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $gender = $input['gender'];
     $bio = $input['bio'];
 
-    $stmtCheck = $db->prepare("SELECT id FROM users WHERE email = :email");
-    $stmtCheck->bindValue(':email', $email, SQLITE3_TEXT);
-    $resCheck = $stmtCheck->execute();
+    $stmt = $pdo->prepare("SELECT id FROM users WHERE email = :email");
+    $stmt->execute(['email' => $email]);
     
-    if ($resCheck->fetchArray()) {
+    if ($stmt->fetch()) {
         http_response_code(400);
         echo json_encode(["error" => "email_taken", "message" => "Этот адрес электронной почты уже занят."]);
         exit;
     }
 
-    $stmt = $db->prepare("INSERT INTO users (email, password, phone, birth_date, prog_lang, gender, bio, role) 
+    $stmt = $pdo->prepare("INSERT INTO users (email, password, phone, birth_date, prog_lang, gender, bio, role) 
                           VALUES (:email, :password, :phone, :date, :lang, :gender, :bio, 'user')");
-    $stmt->bindValue(':email', $email, SQLITE3_TEXT);
-    $stmt->bindValue(':password', $password, SQLITE3_TEXT);
-    $stmt->bindValue(':phone', $phone, SQLITE3_TEXT);
-    $stmt->bindValue(':date', $date, SQLITE3_TEXT);
-    $stmt->bindValue(':lang', $lang, SQLITE3_TEXT);
-    $stmt->bindValue(':gender', $gender, SQLITE3_TEXT);
-    $stmt->bindValue(':bio', $bio, SQLITE3_TEXT);
-
-    if ($stmt->execute()) {
+    
+    if ($stmt->execute([
+        'email' => $email,
+        'password' => $password,
+        'phone' => $phone,
+        'date' => $date,
+        'lang' => $lang,
+        'gender' => $gender,
+        'bio' => $bio
+    ])) {
         http_response_code(201);
         echo json_encode(["message" => "Пользователь успешно зарегистрирован в базе GameZ!"]);
     } else {
@@ -120,10 +134,9 @@ elseif ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = strtolower(trim($input['email']));
     $password = $input['password'];
 
-    $stmt = $db->prepare("SELECT * FROM users WHERE email = :email");
-    $stmt->bindValue(':email', $email, SQLITE3_TEXT);
-    $result = $stmt->execute();
-    $user = $result->fetchArray(SQLITE3_ASSOC);
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE email = :email");
+    $stmt->execute(['email' => $email]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$user) {
         http_response_code(404);
@@ -142,12 +155,14 @@ elseif ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // ==========================================================================
-// 3. АДМИНКА API: ПОЛУЧЕНИЕ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ (SELECT)
+// 3. АДМИНКА: ПОЛУЧЕНИЕ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ
 // ==========================================================================
 elseif ($action === 'get_users' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $adminEmail = isset($_GET['admin_email']) ? strtolower(trim($_GET['admin_email'])) : '';
 
-    $checkRole = $db->querySingle("SELECT role FROM users WHERE email = '" . $db->escapeString($adminEmail) . "'");
+    $stmt = $pdo->prepare("SELECT role FROM users WHERE email = :email");
+    $stmt->execute(['email' => $adminEmail]);
+    $checkRole = $stmt->fetchColumn();
     
     if ($checkRole !== 'admin') {
         http_response_code(403);
@@ -155,21 +170,21 @@ elseif ($action === 'get_users' && $_SERVER['REQUEST_METHOD'] === 'GET') {
         exit;
     }
 
-    $results = $db->query("SELECT id, email, phone, birth_date, prog_lang, gender, bio, role, tetris_score, tetris_lines, checkers_wins, checkers_losses FROM users");
-    $usersList = [];
-    while ($row = $results->fetchArray(SQLITE3_ASSOC)) {
-        $usersList[] = $row;
-    }
+    $results = $pdo->query("SELECT id, email, phone, birth_date, prog_lang, gender, bio, role, tetris_score, tetris_lines, checkers_wins, checkers_losses FROM users");
+    $usersList = $results->fetchAll(PDO::FETCH_ASSOC);
     echo json_encode($usersList);
 }
 
 // ==========================================================================
-// 4. АДМИНКА API: РЕДАКТИРОВАНИЕ ДАННЫХ ПОЛЬЗОВАТЕЛЯ (UPDATE)
+// 4. АДМИНКА: РЕДАКТИРОВАНИЕ
 // ==========================================================================
 elseif ($action === 'edit_user' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $adminEmail = isset($_GET['admin_email']) ? strtolower(trim($_GET['admin_email'])) : '';
 
-    $checkRole = $db->querySingle("SELECT role FROM users WHERE email = '" . $db->escapeString($adminEmail) . "'");
+    $stmt = $pdo->prepare("SELECT role FROM users WHERE email = :email");
+    $stmt->execute(['email' => $adminEmail]);
+    $checkRole = $stmt->fetchColumn();
+    
     if ($checkRole !== 'admin') {
         http_response_code(403);
         echo json_encode(["error" => "forbidden", "message" => "Недостаточно прав для редактирования записей."]);
@@ -184,17 +199,18 @@ elseif ($action === 'edit_user' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $bio = $input['bio'];
     $role = $input['role'];
 
-    $stmt = $db->prepare("UPDATE users SET phone = :phone, birth_date = :date, prog_lang = :lang, gender = :gender, bio = :bio, role = :role WHERE id = :id");
-    $stmt->bindValue(':phone', $phone, SQLITE3_TEXT);
-    $stmt->bindValue(':date', $date, SQLITE3_TEXT);
-    $stmt->bindValue(':lang', $lang, SQLITE3_TEXT);
-    $stmt->bindValue(':gender', $gender, SQLITE3_TEXT);
-    $stmt->bindValue(':bio', $bio, SQLITE3_TEXT);
-    $stmt->bindValue(':role', $role, SQLITE3_TEXT);
-    $stmt->bindValue(':id', $userId, SQLITE3_INTEGER);
-
-    if ($stmt->execute()) {
-        echo json_encode(["message" => "Данные пользователя с ID $userId успешно обновлены в SQL!"]);
+    $stmt = $pdo->prepare("UPDATE users SET phone = :phone, birth_date = :date, prog_lang = :lang, gender = :gender, bio = :bio, role = :role WHERE id = :id");
+    
+    if ($stmt->execute([
+        'phone' => $phone,
+        'date' => $date,
+        'lang' => $lang,
+        'gender' => $gender,
+        'bio' => $bio,
+        'role' => $role,
+        'id' => $userId
+    ])) {
+        echo json_encode(["message" => "Данные пользователя с ID $userId успешно обновлены!"]);
     } else {
         http_response_code(500);
         echo json_encode(["message" => "Не удалось обновить данные в базе."]);
@@ -202,69 +218,59 @@ elseif ($action === 'edit_user' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // ==========================================================================
-// 5. АДМИНКА API: УДАЛЕНИЕ ПОЛЬЗОВАТЕЛЯ ИЗ SQL ТАБЛИЦЫ (DELETE)
+// 5. АДМИНКА: УДАЛЕНИЕ
 // ==========================================================================
 elseif ($action === 'delete_user' && $_SERVER['REQUEST_METHOD'] === 'DELETE') {
     $adminEmail = isset($_GET['admin_email']) ? strtolower(trim($_GET['admin_email'])) : '';
     $userId = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
-    $checkRole = $db->querySingle("SELECT role FROM users WHERE email = '" . $db->escapeString($adminEmail) . "'");
+    $stmt = $pdo->prepare("SELECT role FROM users WHERE email = :email");
+    $stmt->execute(['email' => $adminEmail]);
+    $checkRole = $stmt->fetchColumn();
+    
     if ($checkRole !== 'admin') {
         http_response_code(403);
         echo json_encode(["error" => "forbidden", "message" => "Недостаточно прав для удаления записей."]);
         exit;
     }
 
-    $stmt = $db->prepare("DELETE FROM users WHERE id = :id");
-    $stmt->bindValue(':id', $userId, SQLITE3_INTEGER);
+    $stmt = $pdo->prepare("DELETE FROM users WHERE id = :id");
+    $stmt->execute(['id' => $userId]);
     
-    if ($stmt->execute()) {
-        echo json_encode(["message" => "Пользователь с ID $userId стерт из базы данных GameZ (SQL)!"]);
-    } else {
-        http_response_code(500);
-        echo json_encode(["message" => "Не удалось удалить пользователя."]);
-    }
+    echo json_encode(["message" => "Пользователь с ID $userId удалён из базы данных!"]);
 }
 
 // ==========================================================================
-// 6. ОБНОВЛЕНИЕ БИОГРАФИИ ПОЛЬЗОВАТЕЛЯ (UPDATE)
+// 6. ОБНОВЛЕНИЕ БИОГРАФИИ
 // ==========================================================================
 elseif ($action === 'update-bio' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = strtolower(trim($input['email']));
     $bio = $input['bio'];
     
-    $stmtCheck = $db->prepare("SELECT id FROM users WHERE email = :email");
-    $stmtCheck->bindValue(':email', $email, SQLITE3_TEXT);
-    $resultCheck = $stmtCheck->execute();
+    $stmt = $pdo->prepare("SELECT id FROM users WHERE email = :email");
+    $stmt->execute(['email' => $email]);
     
-    if (!$resultCheck->fetchArray()) {
+    if (!$stmt->fetch()) {
         http_response_code(404);
         echo json_encode(["error" => "user_not_found", "message" => "Пользователь не найден."]);
         exit;
     }
     
-    $stmt = $db->prepare("UPDATE users SET bio = :bio WHERE email = :email");
-    $stmt->bindValue(':bio', $bio, SQLITE3_TEXT);
-    $stmt->bindValue(':email', $email, SQLITE3_TEXT);
+    $stmt = $pdo->prepare("UPDATE users SET bio = :bio WHERE email = :email");
+    $stmt->execute(['bio' => $bio, 'email' => $email]);
     
-    if ($stmt->execute()) {
-        echo json_encode(["message" => "Биография успешно обновлена!"]);
-    } else {
-        http_response_code(500);
-        echo json_encode(["error" => "db_error", "message" => "Не удалось обновить биографию в базе данных."]);
-    }
+    echo json_encode(["message" => "Биография успешно обновлена!"]);
 }
 
 // ==========================================================================
-// 7. СОЗДАНИЕ ИГРОВОЙ КОМНАТЫ (ДЛЯ СЕТЕВОЙ ИГРЫ)
+// 7. СОЗДАНИЕ КОМНАТЫ
 // ==========================================================================
 elseif ($action === 'create_game_room' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = strtolower(trim($input['email']));
     
-    $stmt = $db->prepare("SELECT id, role FROM users WHERE email = :email");
-    $stmt->bindValue(':email', $email, SQLITE3_TEXT);
-    $result = $stmt->execute();
-    $user = $result->fetchArray(SQLITE3_ASSOC);
+    $stmt = $pdo->prepare("SELECT id, role FROM users WHERE email = :email");
+    $stmt->execute(['email' => $email]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$user) {
         http_response_code(401);
@@ -278,16 +284,15 @@ elseif ($action === 'create_game_room' && $_SERVER['REQUEST_METHOD'] === 'POST')
         for ($i = 0; $i < 6; $i++) {
             $roomCode .= $characters[rand(0, strlen($characters) - 1)];
         }
-        $checkRoom = $db->querySingle("SELECT COUNT(*) FROM game_rooms WHERE room_code = '$roomCode' AND status != 'finished'");
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM game_rooms WHERE room_code = :code AND status != 'finished'");
+        $stmt->execute(['code' => $roomCode]);
+        $checkRoom = $stmt->fetchColumn();
     } while ($checkRoom > 0);
     
-    $stmt = $db->prepare("INSERT INTO game_rooms (room_code, white_player, status) VALUES (:code, :player, 'waiting')");
-    $stmt->bindValue(':code', $roomCode, SQLITE3_TEXT);
-    $stmt->bindValue(':player', $email, SQLITE3_TEXT);
-    $stmt->execute();
+    $stmt = $pdo->prepare("INSERT INTO game_rooms (room_code, white_player, status) VALUES (:code, :player, 'waiting')");
+    $stmt->execute(['code' => $roomCode, 'player' => $email]);
     
     echo json_encode(["success" => true, "roomCode" => $roomCode, "color" => "white"]);
-    exit;
 }
 
 // ==========================================================================
@@ -297,10 +302,9 @@ elseif ($action === 'join_game_room' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = strtolower(trim($input['email']));
     $roomCode = strtoupper(trim($input['roomCode']));
     
-    $stmt = $db->prepare("SELECT id, role FROM users WHERE email = :email");
-    $stmt->bindValue(':email', $email, SQLITE3_TEXT);
-    $result = $stmt->execute();
-    $user = $result->fetchArray(SQLITE3_ASSOC);
+    $stmt = $pdo->prepare("SELECT id, role FROM users WHERE email = :email");
+    $stmt->execute(['email' => $email]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$user) {
         http_response_code(401);
@@ -308,10 +312,9 @@ elseif ($action === 'join_game_room' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    $stmt = $db->prepare("SELECT * FROM game_rooms WHERE room_code = :code AND status != 'finished'");
-    $stmt->bindValue(':code', $roomCode, SQLITE3_TEXT);
-    $result = $stmt->execute();
-    $room = $result->fetchArray(SQLITE3_ASSOC);
+    $stmt = $pdo->prepare("SELECT * FROM game_rooms WHERE room_code = :code AND status != 'finished'");
+    $stmt->execute(['code' => $roomCode]);
+    $room = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$room) {
         echo json_encode(["success" => false, "error" => "not_found", "message" => "Комната не найдена"]);
@@ -328,13 +331,10 @@ elseif ($action === 'join_game_room' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    $stmt = $db->prepare("UPDATE game_rooms SET black_player = :player, status = 'ready' WHERE room_code = :code");
-    $stmt->bindValue(':player', $email, SQLITE3_TEXT);
-    $stmt->bindValue(':code', $roomCode, SQLITE3_TEXT);
-    $stmt->execute();
+    $stmt = $pdo->prepare("UPDATE game_rooms SET black_player = :player, status = 'ready' WHERE room_code = :code");
+    $stmt->execute(['player' => $email, 'code' => $roomCode]);
     
     echo json_encode(["success" => true, "roomCode" => $roomCode, "color" => "black"]);
-    exit;
 }
 
 // ==========================================================================
@@ -343,10 +343,9 @@ elseif ($action === 'join_game_room' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 elseif ($action === 'check_game_room' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $roomCode = isset($_GET['roomCode']) ? strtoupper($_GET['roomCode']) : '';
     
-    $stmt = $db->prepare("SELECT * FROM game_rooms WHERE room_code = :code");
-    $stmt->bindValue(':code', $roomCode, SQLITE3_TEXT);
-    $result = $stmt->execute();
-    $room = $result->fetchArray(SQLITE3_ASSOC);
+    $stmt = $pdo->prepare("SELECT * FROM game_rooms WHERE room_code = :code");
+    $stmt->execute(['code' => $roomCode]);
+    $room = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$room) {
         echo json_encode(["success" => false, "error" => "not_found", "message" => "Комната не найдена"]);
@@ -362,7 +361,6 @@ elseif ($action === 'check_game_room' && $_SERVER['REQUEST_METHOD'] === 'GET') {
         "board" => $room['board'] ? json_decode($room['board'], true) : null,
         "winner" => $room['winner']
     ]);
-    exit;
 }
 
 // ==========================================================================
@@ -372,13 +370,10 @@ elseif ($action === 'start_game' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $roomCode = strtoupper($input['roomCode']);
     $board = json_encode($input['board']);
     
-    $stmt = $db->prepare("UPDATE game_rooms SET board = :board, status = 'playing', current_player = 'white' WHERE room_code = :code");
-    $stmt->bindValue(':board', $board, SQLITE3_TEXT);
-    $stmt->bindValue(':code', $roomCode, SQLITE3_TEXT);
-    $stmt->execute();
+    $stmt = $pdo->prepare("UPDATE game_rooms SET board = :board, status = 'playing', current_player = 'white' WHERE room_code = :code");
+    $stmt->execute(['board' => $board, 'code' => $roomCode]);
     
     echo json_encode(["success" => true]);
-    exit;
 }
 
 // ==========================================================================
@@ -390,10 +385,9 @@ elseif ($action === 'make_game_move' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $board = json_encode($input['board']);
     $nextPlayer = $input['nextPlayer'];
     
-    $stmt = $db->prepare("SELECT * FROM game_rooms WHERE room_code = :code");
-    $stmt->bindValue(':code', $roomCode, SQLITE3_TEXT);
-    $result = $stmt->execute();
-    $room = $result->fetchArray(SQLITE3_ASSOC);
+    $stmt = $pdo->prepare("SELECT * FROM game_rooms WHERE room_code = :code");
+    $stmt->execute(['code' => $roomCode]);
+    $room = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$room) {
         echo json_encode(["success" => false, "error" => "not_found", "message" => "Комната не найдена"]);
@@ -409,14 +403,10 @@ elseif ($action === 'make_game_move' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    $stmt = $db->prepare("UPDATE game_rooms SET board = :board, current_player = :next WHERE room_code = :code");
-    $stmt->bindValue(':board', $board, SQLITE3_TEXT);
-    $stmt->bindValue(':next', $nextPlayer, SQLITE3_TEXT);
-    $stmt->bindValue(':code', $roomCode, SQLITE3_TEXT);
-    $stmt->execute();
+    $stmt = $pdo->prepare("UPDATE game_rooms SET board = :board, current_player = :next WHERE room_code = :code");
+    $stmt->execute(['board' => $board, 'next' => $nextPlayer, 'code' => $roomCode]);
     
     echo json_encode(["success" => true]);
-    exit;
 }
 
 // ==========================================================================
@@ -426,13 +416,10 @@ elseif ($action === 'end_game' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $roomCode = strtoupper($input['roomCode']);
     $winner = $input['winner'];
     
-    $stmt = $db->prepare("UPDATE game_rooms SET status = 'finished', winner = :winner WHERE room_code = :code");
-    $stmt->bindValue(':winner', $winner, SQLITE3_TEXT);
-    $stmt->bindValue(':code', $roomCode, SQLITE3_TEXT);
-    $stmt->execute();
+    $stmt = $pdo->prepare("UPDATE game_rooms SET status = 'finished', winner = :winner WHERE room_code = :code");
+    $stmt->execute(['winner' => $winner, 'code' => $roomCode]);
     
     echo json_encode(["success" => true]);
-    exit;
 }
 
 // ==========================================================================
@@ -441,28 +428,32 @@ elseif ($action === 'end_game' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 elseif ($action === 'request_rematch' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $roomCode = strtoupper($input['roomCode']);
     
-    $rematchRequested = $db->querySingle("SELECT rematch_requested FROM game_rooms WHERE room_code = '$roomCode'");
+    $stmt = $pdo->prepare("SELECT rematch_requested FROM game_rooms WHERE room_code = :code");
+    $stmt->execute(['code' => $roomCode]);
+    $rematchRequested = $stmt->fetchColumn();
     
     if ($rematchRequested) {
-        $db->exec("UPDATE game_rooms SET rematch_requested = NULL, status = 'ready' WHERE room_code = '$roomCode'");
+        $stmt = $pdo->prepare("UPDATE game_rooms SET rematch_requested = NULL, status = 'ready' WHERE room_code = :code");
+        $stmt->execute(['code' => $roomCode]);
         echo json_encode(["success" => true, "rematchAccepted" => true]);
     } else {
-        $db->exec("UPDATE game_rooms SET rematch_requested = 1 WHERE room_code = '$roomCode'");
+        $stmt = $pdo->prepare("UPDATE game_rooms SET rematch_requested = 1 WHERE room_code = :code");
+        $stmt->execute(['code' => $roomCode]);
         echo json_encode(["success" => true, "rematchAccepted" => false]);
     }
-    exit;
 }
 
 // ==========================================================================
-// 14. ПРОВЕРКА СТАТУСА РЕВАНША
+// 14. ПРОВЕРКА РЕВАНША
 // ==========================================================================
 elseif ($action === 'check_rematch' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $roomCode = isset($_GET['roomCode']) ? strtoupper($_GET['roomCode']) : '';
     
-    $rematchRequested = $db->querySingle("SELECT rematch_requested FROM game_rooms WHERE room_code = '$roomCode'");
+    $stmt = $pdo->prepare("SELECT rematch_requested FROM game_rooms WHERE room_code = :code");
+    $stmt->execute(['code' => $roomCode]);
+    $rematchRequested = $stmt->fetchColumn();
     
     echo json_encode(["success" => true, "rematchAccepted" => $rematchRequested ? false : true]);
-    exit;
 }
 
 // ==========================================================================
@@ -471,10 +462,10 @@ elseif ($action === 'check_rematch' && $_SERVER['REQUEST_METHOD'] === 'GET') {
 elseif ($action === 'reset_game_room' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $roomCode = strtoupper($input['roomCode']);
     
-    $db->exec("UPDATE game_rooms SET board = NULL, current_player = 'white', status = 'ready', winner = NULL, rematch_requested = NULL WHERE room_code = '$roomCode'");
+    $stmt = $pdo->prepare("UPDATE game_rooms SET board = NULL, current_player = 'white', status = 'ready', winner = NULL, rematch_requested = NULL WHERE room_code = :code");
+    $stmt->execute(['code' => $roomCode]);
     
     echo json_encode(["success" => true]);
-    exit;
 }
 
 // ==========================================================================
@@ -486,10 +477,9 @@ elseif ($action === 'save_tetris_score' && $_SERVER['REQUEST_METHOD'] === 'POST'
     $level = intval($input['level']);
     $lines = intval($input['lines']);
     
-    $stmt = $db->prepare("SELECT tetris_score FROM users WHERE email = :email");
-    $stmt->bindValue(':email', $email, SQLITE3_TEXT);
-    $result = $stmt->execute();
-    $user = $result->fetchArray(SQLITE3_ASSOC);
+    $stmt = $pdo->prepare("SELECT tetris_score FROM users WHERE email = :email");
+    $stmt->execute(['email' => $email]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$user) {
         echo json_encode(["success" => false, "error" => "unauthorized"]);
@@ -497,17 +487,12 @@ elseif ($action === 'save_tetris_score' && $_SERVER['REQUEST_METHOD'] === 'POST'
     }
     
     if ($score > $user['tetris_score']) {
-        $stmt = $db->prepare("UPDATE users SET tetris_score = :score, tetris_level = :level, tetris_lines = :lines WHERE email = :email");
-        $stmt->bindValue(':score', $score, SQLITE3_INTEGER);
-        $stmt->bindValue(':level', $level, SQLITE3_INTEGER);
-        $stmt->bindValue(':lines', $lines, SQLITE3_INTEGER);
-        $stmt->bindValue(':email', $email, SQLITE3_TEXT);
-        $stmt->execute();
+        $stmt = $pdo->prepare("UPDATE users SET tetris_score = :score, tetris_level = :level, tetris_lines = :lines WHERE email = :email");
+        $stmt->execute(['score' => $score, 'level' => $level, 'lines' => $lines, 'email' => $email]);
         echo json_encode(["success" => true, "new_record" => true]);
     } else {
         echo json_encode(["success" => true, "new_record" => false]);
     }
-    exit;
 }
 
 // ==========================================================================
@@ -516,10 +501,9 @@ elseif ($action === 'save_tetris_score' && $_SERVER['REQUEST_METHOD'] === 'POST'
 elseif ($action === 'get_tetris_score' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $email = isset($_GET['email']) ? strtolower(trim($_GET['email'])) : '';
     
-    $stmt = $db->prepare("SELECT tetris_score, tetris_level, tetris_lines FROM users WHERE email = :email");
-    $stmt->bindValue(':email', $email, SQLITE3_TEXT);
-    $result = $stmt->execute();
-    $user = $result->fetchArray(SQLITE3_ASSOC);
+    $stmt = $pdo->prepare("SELECT tetris_score, tetris_level, tetris_lines FROM users WHERE email = :email");
+    $stmt->execute(['email' => $email]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if ($user) {
         echo json_encode([
@@ -531,7 +515,6 @@ elseif ($action === 'get_tetris_score' && $_SERVER['REQUEST_METHOD'] === 'GET') 
     } else {
         echo json_encode(["success" => false, "error" => "user_not_found"]);
     }
-    exit;
 }
 
 // ==========================================================================
@@ -540,17 +523,15 @@ elseif ($action === 'get_tetris_score' && $_SERVER['REQUEST_METHOD'] === 'GET') 
 elseif ($action === 'get_user_stats' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $email = isset($_GET['email']) ? strtolower(trim($_GET['email'])) : '';
     
-    $stmt = $db->prepare("SELECT tetris_score, tetris_level, tetris_lines, checkers_wins, checkers_losses FROM users WHERE email = :email");
-    $stmt->bindValue(':email', $email, SQLITE3_TEXT);
-    $result = $stmt->execute();
-    $user = $result->fetchArray(SQLITE3_ASSOC);
+    $stmt = $pdo->prepare("SELECT tetris_score, tetris_level, tetris_lines, checkers_wins, checkers_losses FROM users WHERE email = :email");
+    $stmt->execute(['email' => $email]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if ($user) {
         echo json_encode(["success" => true, "stats" => $user]);
     } else {
         echo json_encode(["success" => false, "error" => "user_not_found"]);
     }
-    exit;
 }
 
 // ==========================================================================
@@ -560,31 +541,15 @@ elseif ($action === 'save_checkers_result' && $_SERVER['REQUEST_METHOD'] === 'PO
     $email = strtolower(trim($input['email']));
     $result = $input['result'];
     
-    $stmt = $db->prepare("SELECT checkers_wins, checkers_losses FROM users WHERE email = :email");
-    $stmt->bindValue(':email', $email, SQLITE3_TEXT);
-    $resultDb = $stmt->execute();
-    $user = $resultDb->fetchArray(SQLITE3_ASSOC);
-    
-    if (!$user) {
-        echo json_encode(["success" => false, "error" => "unauthorized"]);
-        exit;
-    }
-    
     if ($result === 'win') {
-        $newWins = $user['checkers_wins'] + 1;
-        $stmt = $db->prepare("UPDATE users SET checkers_wins = :wins WHERE email = :email");
-        $stmt->bindValue(':wins', $newWins, SQLITE3_INTEGER);
+        $stmt = $pdo->prepare("UPDATE users SET checkers_wins = checkers_wins + 1 WHERE email = :email");
     } else {
-        $newLosses = $user['checkers_losses'] + 1;
-        $stmt = $db->prepare("UPDATE users SET checkers_losses = :losses WHERE email = :email");
-        $stmt->bindValue(':losses', $newLosses, SQLITE3_INTEGER);
+        $stmt = $pdo->prepare("UPDATE users SET checkers_losses = checkers_losses + 1 WHERE email = :email");
     }
     
-    $stmt->bindValue(':email', $email, SQLITE3_TEXT);
-    $stmt->execute();
+    $stmt->execute(['email' => $email]);
     
     echo json_encode(["success" => true]);
-    exit;
 }
 
 // ==========================================================================
