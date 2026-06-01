@@ -1,5 +1,5 @@
 // ==========================================================================
-// СЕТЕВАЯ ИГРА В ШАШКИ (ИСПРАВЛЕННАЯ ЛОГИКА МНОЖЕСТВЕННЫХ ВЗЯТИЙ)
+// СЕТЕВАЯ ИГРА В ШАШКИ (ТОЛЬКО ДЛЯ ДВУХ ИГРОКОВ)
 // ==========================================================================
 
 let currentUserEmail = null;
@@ -13,7 +13,9 @@ let selectedPiece = null;
 let validMoves = [];
 let myTurn = false;
 let updateInterval = null;
-let waitingForRematch = false;
+let waitingInterval = null;
+let isProcessingMove = false;
+let isWaitingForServer = false;
 
 // DOM элементы
 const authCheck = document.getElementById('auth-check');
@@ -123,7 +125,6 @@ function checkKing(row, col, piece) {
     return false;
 }
 
-// Направления для ходов
 function getMoveDirections(piece) {
     if (piece.isKing) {
         return [[-1, -1], [-1, 1], [1, -1], [1, 1]];
@@ -134,12 +135,10 @@ function getMoveDirections(piece) {
     }
 }
 
-// Направления для взятий (все 4 направления)
 function getCaptureDirections(piece) {
     return [[-1, -1], [-1, 1], [1, -1], [1, 1]];
 }
 
-// Обычные ходы (без взятия)
 function getSimpleMoves(row, col, piece) {
     const moves = [];
     const directions = getMoveDirections(piece);
@@ -152,7 +151,6 @@ function getSimpleMoves(row, col, piece) {
     return moves;
 }
 
-// Ходы дамки (на любое расстояние)
 function getKingMoves(row, col, piece) {
     const moves = [];
     const directions = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
@@ -166,7 +164,6 @@ function getKingMoves(row, col, piece) {
     return moves;
 }
 
-// Взятия для простой шашки
 function getSimpleCaptures(row, col, piece) {
     const captures = [];
     const directions = getCaptureDirections(piece);
@@ -189,7 +186,6 @@ function getSimpleCaptures(row, col, piece) {
     return captures;
 }
 
-// Взятия для дамки
 function getKingCaptures(row, col, piece) {
     const captures = [];
     const directions = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
@@ -221,7 +217,6 @@ function getKingCaptures(row, col, piece) {
     return captures;
 }
 
-// Получение всех возможных ходов для шашки
 function getValidMoves(row, col, piece) {
     if (piece.isKing) {
         const captures = getKingCaptures(row, col, piece);
@@ -234,7 +229,6 @@ function getValidMoves(row, col, piece) {
     }
 }
 
-// Проверка наличия обязательных взятий
 function hasCaptureMoves(color) {
     for (let row = 0; row < 8; row++) {
         for (let col = 0; col < 8; col++) {
@@ -248,7 +242,6 @@ function hasCaptureMoves(color) {
     return false;
 }
 
-// Получение продолжения боя (для множественных взятий)
 function getContinuationCaptures(row, col, piece) {
     if (piece.isKing) {
         return getKingCaptures(row, col, piece);
@@ -257,7 +250,6 @@ function getContinuationCaptures(row, col, piece) {
     }
 }
 
-// Выполнение хода
 function makeMove(fromRow, fromCol, toRow, toCol, captures) {
     const piece = board[fromRow][fromCol];
     if (!piece) return false;
@@ -275,13 +267,35 @@ function makeMove(fromRow, fromCol, toRow, toCol, captures) {
     return hadCapture;
 }
 
-// Проверка окончания игры
 function checkGameOver() {
     const { whiteCount, blackCount } = updateCounters();
     
     if (whiteCount === 0) return 'black';
     if (blackCount === 0) return 'white';
+    
+    const whiteMoves = getAllValidMoves('white').length;
+    const blackMoves = getAllValidMoves('black').length;
+    
+    if (whiteMoves === 0) return 'black';
+    if (blackMoves === 0) return 'white';
+    
     return null;
+}
+
+function getAllValidMoves(color) {
+    const moves = [];
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            const piece = board[row][col];
+            if (piece && piece.color === color) {
+                const pieceMoves = getValidMoves(row, col, piece);
+                for (const move of pieceMoves) {
+                    moves.push({ fromRow: row, fromCol: col, ...move });
+                }
+            }
+        }
+    }
+    return moves;
 }
 
 // ==========================================================================
@@ -344,25 +358,30 @@ async function createRoom() {
 }
 
 function startWaitingForOpponent() {
-    const checkInterval = setInterval(async () => {
+    if (waitingInterval) clearInterval(waitingInterval);
+    
+    waitingInterval = setInterval(async () => {
         const result = await apiGet('check_game_room', { roomCode: roomCode });
         if (result && result.success) {
             if (result.white_player && result.black_player) {
-                clearInterval(checkInterval);
+                clearInterval(waitingInterval);
+                waitingInterval = null;
                 startGame();
             }
         }
     }, 2000);
-    
-    window.cancelWaiting = () => {
-        clearInterval(checkInterval);
-        cancelWaiting();
-    };
 }
 
-async function cancelWaiting() {
+function cancelWaiting() {
+    if (waitingInterval) {
+        clearInterval(waitingInterval);
+        waitingInterval = null;
+    }
     waitingScreen.style.display = 'none';
     connectionScreen.style.display = 'block';
+    selectedPiece = null;
+    validMoves = [];
+    showToast('Поиск соперника отменён');
 }
 
 async function joinRoom(code) {
@@ -410,6 +429,8 @@ async function startGame() {
     gameActive = true;
     currentPlayer = 'white';
     myTurn = (myColor === 'white');
+    isProcessingMove = false;
+    isWaitingForServer = false;
     
     updateUI();
     renderBoard();
@@ -426,9 +447,12 @@ function updateUI() {
     }
     
     if (gameActive) {
-        if (currentPlayer === myColor) {
+        if (currentPlayer === myColor && !isProcessingMove && !isWaitingForServer) {
             turnIndicator.innerHTML = '🎮 Ваш ход';
             gameStatus.innerHTML = 'Ваш ход! Выберите шашку';
+        } else if (currentPlayer === myColor && (isProcessingMove || isWaitingForServer)) {
+            turnIndicator.innerHTML = '⏳ Обработка хода...';
+            gameStatus.innerHTML = 'Подождите, обрабатывается ваш ход';
         } else {
             turnIndicator.innerHTML = '⏳ Ход соперника';
             gameStatus.innerHTML = 'Ожидайте хода соперника...';
@@ -458,19 +482,24 @@ function startGameUpdates() {
         const result = await apiGet('check_game_room', { roomCode: roomCode });
         if (result && result.success) {
             if (result.board) {
-                const oldBoard = JSON.stringify(board);
-                const newBoard = JSON.stringify(result.board);
+                const oldBoardStr = JSON.stringify(board);
+                const newBoardStr = JSON.stringify(result.board);
                 
-                if (oldBoard !== newBoard) {
+                if (oldBoardStr !== newBoardStr) {
                     board = result.board;
                     currentPlayer = result.current_player;
                     myTurn = (currentPlayer === myColor);
+                    isProcessingMove = false;
+                    isWaitingForServer = false;
+                    
+                    selectedPiece = null;
+                    validMoves = [];
                     
                     renderBoard();
                     updateUI();
                     
-                    if (!myTurn) {
-                        showToast('Ход соперника...');
+                    if (myTurn) {
+                        showToast('Ваш ход!');
                     }
                 }
             }
@@ -483,74 +512,45 @@ function startGameUpdates() {
     }, 1000);
 }
 
-async function sendMove(nextPlayer) {
+async function sendCompleteMove(finalBoard, nextPlayer) {
+    isWaitingForServer = true;
+    updateUI();
+    
     const result = await apiRequest('make_game_move', {
         roomCode: roomCode,
-        board: copyBoard(),
+        board: finalBoard,
         nextPlayer: nextPlayer
     });
+    
+    isWaitingForServer = false;
     
     if (result && result.success) {
         currentPlayer = nextPlayer;
         myTurn = (currentPlayer === myColor);
+        isProcessingMove = false;
         updateUI();
         renderBoard();
     } else {
         showToast(result?.message || 'Ошибка отправки хода');
+        isProcessingMove = false;
+        updateUI();
     }
 }
 
-function showGameResult(winner) {
-    gameActive = false;
-    if (updateInterval) clearInterval(updateInterval);
-    
-    const isWinner = (winner === myColor);
-    const whitePlayer = whiteEmailSpan.textContent;
-    const blackPlayer = blackEmailSpan.textContent;
-    
-    const winnerName = winner === 'white' ? whitePlayer : blackPlayer;
-    const loserName = winner === 'white' ? blackPlayer : whitePlayer;
-    
-    if (isWinner) {
-        resultIcon.innerHTML = '🏆🎉🏆';
-        resultTitle.innerHTML = 'ПОБЕДА!';
-        resultTitle.style.color = '#ffd700';
-        resultMessage.innerHTML = 'Поздравляем! Вы выиграли партию!';
-        resultDetails.innerHTML = `
-            <p>🏆 <span class="winner-name">${winnerName}</span> победил!</p>
-            <p>😔 ${loserName} проиграл</p>
-            <p>⭐ Отличная игра!</p>
-        `;
-    } else {
-        resultIcon.innerHTML = '😔💔😔';
-        resultTitle.innerHTML = 'ПОРАЖЕНИЕ';
-        resultTitle.style.color = '#e81123';
-        resultMessage.innerHTML = 'Вы проиграли эту партию. Не отчаивайтесь!';
-        resultDetails.innerHTML = `
-            <p>🏆 Победитель: <span class="winner-name">${winnerName}</span></p>
-            <p>😔 Вы проиграли</p>
-            <p>💪 В следующий раз обязательно получится!</p>
-        `;
-    }
-    
-    apiRequest('end_game', { roomCode: roomCode, winner: winner });
-    resultModal.classList.add('show');
-}
-
 // ==========================================================================
-// ОСНОВНАЯ ЛОГИКА ХОДОВ (ИСПРАВЛЕННАЯ)
+// ОСНОВНАЯ ЛОГИКА ХОДОВ
 // ==========================================================================
 
-function handlePlayerMove(row, col) {
-    if (!gameActive || !myTurn) {
-        if (!myTurn) showToast('Сейчас не ваш ход');
+async function handlePlayerMove(row, col) {
+    if (!gameActive || !myTurn || isProcessingMove || isWaitingForServer) {
+        if (isProcessingMove) showToast('Подождите, обрабатывается ваш ход');
+        else if (!myTurn) showToast('Сейчас не ваш ход');
         return false;
     }
     
     const piece = board[row][col];
     const captureRequired = hasCaptureMoves(myColor);
     
-    // ВЫБОР ШАШКИ
     if (!selectedPiece && piece && piece.color === myColor) {
         const moves = getValidMoves(row, col, piece);
         let movesToShow = moves;
@@ -573,49 +573,49 @@ function handlePlayerMove(row, col) {
         return false;
     }
     
-    // ХОД ВЫБРАННОЙ ШАШКОЙ
     if (selectedPiece) {
         const move = validMoves.find(m => m.toRow === row && m.toCol === col);
         if (move) {
-            // Выполняем ход
+            isProcessingMove = true;
+            updateUI();
+            
             const hadCapture = makeMove(selectedPiece.row, selectedPiece.col, row, col, move.captures);
             
             selectedPiece = null;
             validMoves = [];
             
-            // Проверяем, есть ли продолжение боя
-            let continueTurn = false;
+            renderBoard();
+            
+            const winner = checkGameOver();
+            if (winner) {
+                gameActive = false;
+                isProcessingMove = false;
+                showGameResult(winner);
+                return true;
+            }
+            
             if (hadCapture) {
                 const movedPiece = board[row][col];
                 const nextCaptures = getContinuationCaptures(row, col, movedPiece);
+                
                 if (nextCaptures.length > 0) {
-                    continueTurn = true;
                     selectedPiece = { row, col };
                     validMoves = nextCaptures;
                     gameStatus.innerHTML = '🔄 Бейте дальше! Выберите следующую клетку';
+                    isProcessingMove = false;
+                    updateUI();
                     renderBoard();
                     return false;
                 }
             }
             
-            renderBoard();
+            const nextPlayer = myColor === 'white' ? 'black' : 'white';
+            const finalBoard = copyBoard();
             
-            // Проверяем, не закончилась ли игра
-            const winner = checkGameOver();
-            if (winner) {
-                gameActive = false;
-                showGameResult(winner);
-                return true;
-            }
+            await sendCompleteMove(finalBoard, nextPlayer);
             
-            // Если нет продолжения боя, передаём ход
-            if (!continueTurn) {
-                const nextPlayer = myColor === 'white' ? 'black' : 'white';
-                sendMove(nextPlayer);
-            }
             return true;
         } else {
-            // Отмена выбора
             selectedPiece = null;
             validMoves = [];
             gameStatus.innerHTML = '❌ Ход отменён. Выберите другую шашку';
@@ -675,7 +675,10 @@ function showToast(message) {
 
 function disconnect() {
     if (updateInterval) clearInterval(updateInterval);
+    if (waitingInterval) clearInterval(waitingInterval);
     gameActive = false;
+    isProcessingMove = false;
+    isWaitingForServer = false;
     resultModal.classList.remove('show');
     connectionScreen.style.display = 'block';
     gameInterface.style.display = 'none';
@@ -705,6 +708,8 @@ async function startNewGame() {
     gameActive = true;
     currentPlayer = 'white';
     myTurn = (myColor === 'white');
+    isProcessingMove = false;
+    isWaitingForServer = false;
     
     updateUI();
     renderBoard();
@@ -713,7 +718,62 @@ async function startNewGame() {
     showToast('🔄 Новая игра началась!');
 }
 
-// Event listeners
+function showGameResult(winner) {
+    gameActive = false;
+    if (updateInterval) clearInterval(updateInterval);
+    
+    const isWinner = (winner === myColor);
+    const whitePlayer = whiteEmailSpan.textContent;
+    const blackPlayer = blackEmailSpan.textContent;
+    
+    const winnerName = winner === 'white' ? whitePlayer : blackPlayer;
+    const loserName = winner === 'white' ? blackPlayer : whitePlayer;
+    
+    if (isWinner) {
+        resultIcon.innerHTML = '🏆🎉🏆';
+        resultTitle.innerHTML = 'ПОБЕДА!';
+        resultTitle.style.color = '#ffd700';
+        resultMessage.innerHTML = 'Поздравляем! Вы выиграли партию!';
+        resultDetails.innerHTML = `
+            <p>🏆 <span class="winner-name">${winnerName}</span> победил!</p>
+            <p>😔 ${loserName} проиграл</p>
+            <p>⭐ Отличная игра!</p>
+        `;
+        saveCheckersResult('win');
+    } else {
+        resultIcon.innerHTML = '😔💔😔';
+        resultTitle.innerHTML = 'ПОРАЖЕНИЕ';
+        resultTitle.style.color = '#e81123';
+        resultMessage.innerHTML = 'Вы проиграли эту партию. Не отчаивайтесь!';
+        resultDetails.innerHTML = `
+            <p>🏆 Победитель: <span class="winner-name">${winnerName}</span></p>
+            <p>😔 Вы проиграли</p>
+            <p>💪 В следующий раз обязательно получится!</p>
+        `;
+        saveCheckersResult('loss');
+    }
+    
+    apiRequest('end_game', { roomCode: roomCode, winner: winner });
+    resultModal.classList.add('show');
+}
+
+async function saveCheckersResult(result) {
+    if (!currentUserEmail) return;
+    
+    try {
+        await apiRequest('save_checkers_result', {
+            email: currentUserEmail,
+            result: result
+        });
+    } catch (error) {
+        console.error('Error saving checkers result:', error);
+    }
+}
+
+// ==========================================================================
+// EVENT LISTENERS
+// ==========================================================================
+
 document.getElementById('create-room-btn')?.addEventListener('click', createRoom);
 document.getElementById('join-room-btn')?.addEventListener('click', () => {
     document.getElementById('join-room-panel').style.display = 'block';
@@ -730,9 +790,7 @@ document.getElementById('cancel-join-btn')?.addEventListener('click', () => {
     document.getElementById('join-room-panel').style.display = 'none';
     document.getElementById('room-code-input').value = '';
 });
-document.getElementById('cancel-waiting-btn')?.addEventListener('click', () => {
-    if (window.cancelWaiting) window.cancelWaiting();
-});
+document.getElementById('cancel-waiting-btn')?.addEventListener('click', cancelWaiting);
 document.getElementById('back-btn')?.addEventListener('click', goBack);
 document.getElementById('disconnect-btn')?.addEventListener('click', disconnect);
 document.getElementById('rematch-btn')?.addEventListener('click', startNewGame);

@@ -23,7 +23,7 @@ try {
     exit;
 }
 
-// Автоматически создаем таблицу пользователей с колонкой 'role'
+// Автоматически создаем таблицу пользователей с колонкой 'role' и рекордами
 $db->exec("CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT NOT NULL UNIQUE,
@@ -33,8 +33,20 @@ $db->exec("CREATE TABLE IF NOT EXISTS users (
     prog_lang TEXT NOT NULL,
     gender TEXT NOT NULL,
     bio TEXT,
-    role TEXT NOT NULL DEFAULT 'user'
+    role TEXT NOT NULL DEFAULT 'user',
+    tetris_score INTEGER DEFAULT 0,
+    tetris_level INTEGER DEFAULT 0,
+    tetris_lines INTEGER DEFAULT 0,
+    checkers_wins INTEGER DEFAULT 0,
+    checkers_losses INTEGER DEFAULT 0
 )");
+
+// Добавляем колонки если их нет (для существующей базы)
+$db->exec("ALTER TABLE users ADD COLUMN tetris_score INTEGER DEFAULT 0");
+$db->exec("ALTER TABLE users ADD COLUMN tetris_level INTEGER DEFAULT 0");
+$db->exec("ALTER TABLE users ADD COLUMN tetris_lines INTEGER DEFAULT 0");
+$db->exec("ALTER TABLE users ADD COLUMN checkers_wins INTEGER DEFAULT 0");
+$db->exec("ALTER TABLE users ADD COLUMN checkers_losses INTEGER DEFAULT 0");
 
 // Создаем таблицу для игровых комнат (сетевая игра в шашки)
 $db->exec("CREATE TABLE IF NOT EXISTS game_rooms (
@@ -54,7 +66,7 @@ $db->exec("CREATE TABLE IF NOT EXISTS game_rooms (
 $checkAdmin = $db->querySingle("SELECT COUNT(*) FROM users WHERE email = 'admin@gamez.com'");
 if (empty($checkAdmin) || $checkAdmin == 0) {
     $db->exec("INSERT INTO users (email, password, phone, birth_date, prog_lang, gender, bio, role) 
-               VALUES ('admin@gamez.com', 'admin777', '+79991112233', '1995-01-01', 'C#', 'Мужской', 'Главный администратор системы GameZ.', 'admin')");
+               VALUES ('admin@z.com', '12345678', '+79991112233', '1995-01-01', 'C#', 'Мужской', 'администратор.', 'admin')");
 }
 
 $action = isset($_GET['action']) ? $_GET['action'] : '';
@@ -143,7 +155,7 @@ elseif ($action === 'get_users' && $_SERVER['REQUEST_METHOD'] === 'GET') {
         exit;
     }
 
-    $results = $db->query("SELECT id, email, phone, birth_date, prog_lang, gender, bio, role FROM users");
+    $results = $db->query("SELECT id, email, phone, birth_date, prog_lang, gender, bio, role, tetris_score, tetris_lines, checkers_wins, checkers_losses FROM users");
     $usersList = [];
     while ($row = $results->fetchArray(SQLITE3_ASSOC)) {
         $usersList[] = $row;
@@ -221,7 +233,6 @@ elseif ($action === 'update-bio' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = strtolower(trim($input['email']));
     $bio = $input['bio'];
     
-    // Проверяем, существует ли пользователь
     $stmtCheck = $db->prepare("SELECT id FROM users WHERE email = :email");
     $stmtCheck->bindValue(':email', $email, SQLITE3_TEXT);
     $resultCheck = $stmtCheck->execute();
@@ -250,7 +261,6 @@ elseif ($action === 'update-bio' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 elseif ($action === 'create_game_room' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = strtolower(trim($input['email']));
     
-    // Проверяем, авторизован ли пользователь
     $stmt = $db->prepare("SELECT id, role FROM users WHERE email = :email");
     $stmt->bindValue(':email', $email, SQLITE3_TEXT);
     $result = $stmt->execute();
@@ -262,7 +272,6 @@ elseif ($action === 'create_game_room' && $_SERVER['REQUEST_METHOD'] === 'POST')
         exit;
     }
     
-    // Генерируем уникальный код комнаты (6 символов)
     $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     do {
         $roomCode = '';
@@ -272,17 +281,12 @@ elseif ($action === 'create_game_room' && $_SERVER['REQUEST_METHOD'] === 'POST')
         $checkRoom = $db->querySingle("SELECT COUNT(*) FROM game_rooms WHERE room_code = '$roomCode' AND status != 'finished'");
     } while ($checkRoom > 0);
     
-    // Создаём комнату
     $stmt = $db->prepare("INSERT INTO game_rooms (room_code, white_player, status) VALUES (:code, :player, 'waiting')");
     $stmt->bindValue(':code', $roomCode, SQLITE3_TEXT);
     $stmt->bindValue(':player', $email, SQLITE3_TEXT);
     $stmt->execute();
     
-    echo json_encode([
-        "success" => true,
-        "roomCode" => $roomCode,
-        "color" => "white"
-    ]);
+    echo json_encode(["success" => true, "roomCode" => $roomCode, "color" => "white"]);
     exit;
 }
 
@@ -293,7 +297,6 @@ elseif ($action === 'join_game_room' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = strtolower(trim($input['email']));
     $roomCode = strtoupper(trim($input['roomCode']));
     
-    // Проверяем авторизацию
     $stmt = $db->prepare("SELECT id, role FROM users WHERE email = :email");
     $stmt->bindValue(':email', $email, SQLITE3_TEXT);
     $result = $stmt->execute();
@@ -305,7 +308,6 @@ elseif ($action === 'join_game_room' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    // Проверяем комнату
     $stmt = $db->prepare("SELECT * FROM game_rooms WHERE room_code = :code AND status != 'finished'");
     $stmt->bindValue(':code', $roomCode, SQLITE3_TEXT);
     $result = $stmt->execute();
@@ -326,17 +328,12 @@ elseif ($action === 'join_game_room' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    // Подключаем чёрного игрока
     $stmt = $db->prepare("UPDATE game_rooms SET black_player = :player, status = 'ready' WHERE room_code = :code");
     $stmt->bindValue(':player', $email, SQLITE3_TEXT);
     $stmt->bindValue(':code', $roomCode, SQLITE3_TEXT);
     $stmt->execute();
     
-    echo json_encode([
-        "success" => true,
-        "roomCode" => $roomCode,
-        "color" => "black"
-    ]);
+    echo json_encode(["success" => true, "roomCode" => $roomCode, "color" => "black"]);
     exit;
 }
 
@@ -393,7 +390,6 @@ elseif ($action === 'make_game_move' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $board = json_encode($input['board']);
     $nextPlayer = $input['nextPlayer'];
     
-    // Получаем комнату
     $stmt = $db->prepare("SELECT * FROM game_rooms WHERE room_code = :code");
     $stmt->bindValue(':code', $roomCode, SQLITE3_TEXT);
     $result = $stmt->execute();
@@ -404,7 +400,6 @@ elseif ($action === 'make_game_move' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    // Проверяем, чей ход
     $isWhiteTurn = $room['current_player'] === 'white';
     $isWhitePlayer = $room['white_player'] === $email;
     $isBlackPlayer = $room['black_player'] === $email;
@@ -414,7 +409,6 @@ elseif ($action === 'make_game_move' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    // Обновляем доску и текущего игрока
     $stmt = $db->prepare("UPDATE game_rooms SET board = :board, current_player = :next WHERE room_code = :code");
     $stmt->bindValue(':board', $board, SQLITE3_TEXT);
     $stmt->bindValue(':next', $nextPlayer, SQLITE3_TEXT);
@@ -442,23 +436,14 @@ elseif ($action === 'end_game' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // ==========================================================================
-// 14. ЗАПРОС РЕВАНША
+// 13. ЗАПРОС РЕВАНША
 // ==========================================================================
 elseif ($action === 'request_rematch' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $roomCode = strtoupper($input['roomCode']);
     
-    $stmt = $db->prepare("SELECT rematch_requested FROM game_rooms WHERE room_code = :code");
-    $stmt->bindValue(':code', $roomCode, SQLITE3_TEXT);
-    $result = $stmt->execute();
-    $room = $result->fetchArray(SQLITE3_ASSOC);
+    $rematchRequested = $db->querySingle("SELECT rematch_requested FROM game_rooms WHERE room_code = '$roomCode'");
     
-    if (!$room) {
-        echo json_encode(["success" => false]);
-        exit;
-    }
-    
-    if ($room['rematch_requested']) {
-        // Соперник уже запросил реванш - начинаем новую игру
+    if ($rematchRequested) {
         $db->exec("UPDATE game_rooms SET rematch_requested = NULL, status = 'ready' WHERE room_code = '$roomCode'");
         echo json_encode(["success" => true, "rematchAccepted" => true]);
     } else {
@@ -469,22 +454,19 @@ elseif ($action === 'request_rematch' && $_SERVER['REQUEST_METHOD'] === 'POST') 
 }
 
 // ==========================================================================
-// 15. ПРОВЕРКА СТАТУСА РЕВАНША
+// 14. ПРОВЕРКА СТАТУСА РЕВАНША
 // ==========================================================================
 elseif ($action === 'check_rematch' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $roomCode = isset($_GET['roomCode']) ? strtoupper($_GET['roomCode']) : '';
     
     $rematchRequested = $db->querySingle("SELECT rematch_requested FROM game_rooms WHERE room_code = '$roomCode'");
     
-    echo json_encode([
-        "success" => true,
-        "rematchAccepted" => $rematchRequested == 1 ? false : true
-    ]);
+    echo json_encode(["success" => true, "rematchAccepted" => $rematchRequested ? false : true]);
     exit;
 }
 
 // ==========================================================================
-// 16. СБРОС КОМНАТЫ ДЛЯ НОВОЙ ИГРЫ
+// 15. СБРОС КОМНАТЫ ДЛЯ НОВОЙ ИГРЫ
 // ==========================================================================
 elseif ($action === 'reset_game_room' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $roomCode = strtoupper($input['roomCode']);
@@ -494,10 +476,122 @@ elseif ($action === 'reset_game_room' && $_SERVER['REQUEST_METHOD'] === 'POST') 
     echo json_encode(["success" => true]);
     exit;
 }
-// чет-то не так
+
+// ==========================================================================
+// 16. СОХРАНЕНИЕ РЕКОРДА ТЕТРИСА
+// ==========================================================================
+elseif ($action === 'save_tetris_score' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $email = strtolower(trim($input['email']));
+    $score = intval($input['score']);
+    $level = intval($input['level']);
+    $lines = intval($input['lines']);
+    
+    $stmt = $db->prepare("SELECT tetris_score FROM users WHERE email = :email");
+    $stmt->bindValue(':email', $email, SQLITE3_TEXT);
+    $result = $stmt->execute();
+    $user = $result->fetchArray(SQLITE3_ASSOC);
+    
+    if (!$user) {
+        echo json_encode(["success" => false, "error" => "unauthorized"]);
+        exit;
+    }
+    
+    if ($score > $user['tetris_score']) {
+        $stmt = $db->prepare("UPDATE users SET tetris_score = :score, tetris_level = :level, tetris_lines = :lines WHERE email = :email");
+        $stmt->bindValue(':score', $score, SQLITE3_INTEGER);
+        $stmt->bindValue(':level', $level, SQLITE3_INTEGER);
+        $stmt->bindValue(':lines', $lines, SQLITE3_INTEGER);
+        $stmt->bindValue(':email', $email, SQLITE3_TEXT);
+        $stmt->execute();
+        echo json_encode(["success" => true, "new_record" => true]);
+    } else {
+        echo json_encode(["success" => true, "new_record" => false]);
+    }
+    exit;
+}
+
+// ==========================================================================
+// 17. ПОЛУЧЕНИЕ РЕКОРДА ТЕТРИСА
+// ==========================================================================
+elseif ($action === 'get_tetris_score' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    $email = isset($_GET['email']) ? strtolower(trim($_GET['email'])) : '';
+    
+    $stmt = $db->prepare("SELECT tetris_score, tetris_level, tetris_lines FROM users WHERE email = :email");
+    $stmt->bindValue(':email', $email, SQLITE3_TEXT);
+    $result = $stmt->execute();
+    $user = $result->fetchArray(SQLITE3_ASSOC);
+    
+    if ($user) {
+        echo json_encode([
+            "success" => true,
+            "score" => $user['tetris_score'],
+            "level" => $user['tetris_level'],
+            "lines" => $user['tetris_lines']
+        ]);
+    } else {
+        echo json_encode(["success" => false, "error" => "user_not_found"]);
+    }
+    exit;
+}
+
+// ==========================================================================
+// 18. ПОЛУЧЕНИЕ СТАТИСТИКИ ПОЛЬЗОВАТЕЛЯ
+// ==========================================================================
+elseif ($action === 'get_user_stats' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    $email = isset($_GET['email']) ? strtolower(trim($_GET['email'])) : '';
+    
+    $stmt = $db->prepare("SELECT tetris_score, tetris_level, tetris_lines, checkers_wins, checkers_losses FROM users WHERE email = :email");
+    $stmt->bindValue(':email', $email, SQLITE3_TEXT);
+    $result = $stmt->execute();
+    $user = $result->fetchArray(SQLITE3_ASSOC);
+    
+    if ($user) {
+        echo json_encode(["success" => true, "stats" => $user]);
+    } else {
+        echo json_encode(["success" => false, "error" => "user_not_found"]);
+    }
+    exit;
+}
+
+// ==========================================================================
+// 19. СОХРАНЕНИЕ РЕЗУЛЬТАТА ШАШЕК
+// ==========================================================================
+elseif ($action === 'save_checkers_result' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $email = strtolower(trim($input['email']));
+    $result = $input['result'];
+    
+    $stmt = $db->prepare("SELECT checkers_wins, checkers_losses FROM users WHERE email = :email");
+    $stmt->bindValue(':email', $email, SQLITE3_TEXT);
+    $resultDb = $stmt->execute();
+    $user = $resultDb->fetchArray(SQLITE3_ASSOC);
+    
+    if (!$user) {
+        echo json_encode(["success" => false, "error" => "unauthorized"]);
+        exit;
+    }
+    
+    if ($result === 'win') {
+        $newWins = $user['checkers_wins'] + 1;
+        $stmt = $db->prepare("UPDATE users SET checkers_wins = :wins WHERE email = :email");
+        $stmt->bindValue(':wins', $newWins, SQLITE3_INTEGER);
+    } else {
+        $newLosses = $user['checkers_losses'] + 1;
+        $stmt = $db->prepare("UPDATE users SET checkers_losses = :losses WHERE email = :email");
+        $stmt->bindValue(':losses', $newLosses, SQLITE3_INTEGER);
+    }
+    
+    $stmt->bindValue(':email', $email, SQLITE3_TEXT);
+    $stmt->execute();
+    
+    echo json_encode(["success" => true]);
+    exit;
+}
+
+// ==========================================================================
+// 20. НЕИЗВЕСТНОЕ ДЕЙСТВИЕ
+// ==========================================================================
 else {
     http_response_code(404);
     echo json_encode(["message" => "Метод или действие API не найдено."]);
 }
-
 ?>

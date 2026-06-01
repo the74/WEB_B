@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Тетрис</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>Тетрис</h1>
+            <p>Классическая головоломка</p>
+        </div>
+
+        <div class="game-wrapper">
+            <!-- Основное игровое поле -->
+            <div class="game-area">
+                <canvas id="tetris-canvas" class="tetris-canvas"></canvas>
+            </div>
+
+            <!-- Информационная панель -->
+            <div class="info-panel">
+                <div class="next-piece">
+                    <h3>Следующая фигура</h3>
+                    <canvas id="next-canvas" class="next-canvas"></canvas>
+                </div>
+                
+                <div class="score-board">
+                    <div class="score-item">
+                        <span class="score-label">Счёт</span>
+                        <span class="score-value" id="score">0</span>
+                    </div>
+                    <div class="score-item">
+                        <span class="score-label">Линии</span>
+                        <span class="score-value" id="lines">0</span>
+                    </div>
+                    <div class="score-item">
+                        <span class="score-label">Уровень</span>
+                        <span class="score-value" id="level">1</span>
+                    </div>
+                    <div class="score-item">
+                        <span class="score-label">Рекорд</span>
+                        <span class="score-value" id="high-score">0</span>
+                    </div>
+                </div>
+
+                <div class="controls-info">
+                    <h4>Управление</h4>
+                    <p>← → - движение</p>
+                    <p>↑ - поворот</p>
+                    <p>↓ - ускорить</p>
+                    <p>Пробел - сбросить</p>
+                    <p>R - новая игра</p>
+                </div>
+
+                <div class="game-buttons">
+                    <button class="btn" id="start-btn">▶ Старт</button>
+                    <button class="btn" id="pause-btn" disabled>⏸ Пауза</button>
+                    <button class="btn back" id="back-btn">На главную</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-status" id="game-status">
+            Нажмите "Старт" для начала игры
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

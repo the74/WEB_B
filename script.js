@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Проверяем сессию
     checkUserSession();
     setupLiveErrorCleaner();
+    initScrollAnimations();
 
     // ==========================================================================
     // 2. СЛАЙДЕР
@@ -199,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (toggle && input) {
             toggle.addEventListener('click', () => {
                 input.type = input.type === 'password' ? 'text' : 'password';
-                toggle.textContent = input.type === 'password' ? '👁' : '🙈';
+                toggle.textContent = input.type === 'password' ? '👁' : ':)';
             });
         }
     }
@@ -249,52 +250,40 @@ document.addEventListener('DOMContentLoaded', () => {
         return re.test(String(email).toLowerCase());
     }
 
-// ==========================================================================
-// 6. ВАЛИДАЦИЯ ТЕЛЕФОНА
-// ==========================================================================
+    function validateRussianPhone(phone) {
+        const cleanPhone = phone.replace(/[\s\-\(\)\_]/g, '');
+        const phonePattern = /^(\+7|8|7)?(\d{10})$/;
+        const match = cleanPhone.match(phonePattern);
+        
+        if (!match) return false;
+        if (match[2] && match[2].length === 10 && !match[1]) return true;
+        
+        const hasPrefix = match[1] === '+7' || match[1] === '8' || match[1] === '7';
+        const hasElevenDigits = match[2] && match[2].length === 11;
+        
+        if (hasPrefix && hasElevenDigits) return true;
+        if (match[2] && match[2].length === 11 && !match[1]) return true;
+        
+        return false;
+    }
 
-// Простая валидация российского телефона
-function validateRussianPhone(phone) {
-    // Удаляем все лишние символы: пробелы, дефисы, скобки, плюс в начале
-    let clean = phone.replace(/[\s\-\(\)]/g, '');
-    
-    // Убираем +7 в начале если есть
-    if (clean.startsWith('+7')) {
-        clean = clean.substring(2);
+    function formatRussianPhone(phone) {
+        const cleanPhone = phone.replace(/[\s\-\(\)\_]/g, '');
+        
+        if (/^\d{10}$/.test(cleanPhone)) {
+            return `+7 (${cleanPhone.slice(0,3)}) ${cleanPhone.slice(3,6)}-${cleanPhone.slice(6,8)}-${cleanPhone.slice(8,10)}`;
+        }
+        if (/^\d{11}$/.test(cleanPhone)) {
+            return `+${cleanPhone.slice(0,1)} (${cleanPhone.slice(1,4)}) ${cleanPhone.slice(4,7)}-${cleanPhone.slice(7,9)}-${cleanPhone.slice(9,11)}`;
+        }
+        if (/^8\d{10}$/.test(cleanPhone)) {
+            return `+7 (${cleanPhone.slice(1,4)}) ${cleanPhone.slice(4,7)}-${cleanPhone.slice(7,9)}-${cleanPhone.slice(9,11)}`;
+        }
+        if (/^\+7\d{10}$/.test(cleanPhone)) {
+            return `+7 (${cleanPhone.slice(2,5)}) ${cleanPhone.slice(5,8)}-${cleanPhone.slice(8,10)}-${cleanPhone.slice(10,12)}`;
+        }
+        return phone;
     }
-    // Убираем 8 в начале если есть
-    else if (clean.startsWith('8')) {
-        clean = clean.substring(1);
-    }
-    // Убираем 7 в начале если есть
-    else if (clean.startsWith('7')) {
-        clean = clean.substring(1);
-    }
-    
-    // Проверяем что осталось 10 цифр
-    return /^\d{10}$/.test(clean);
-}
-
-// Форматирование телефона для отображения
-function formatRussianPhone(phone) {
-    let clean = phone.replace(/[\s\-\(\)]/g, '');
-    
-    // Убираем +7 или 8 в начале
-    if (clean.startsWith('+7')) {
-        clean = clean.substring(2);
-    } else if (clean.startsWith('8')) {
-        clean = clean.substring(1);
-    } else if (clean.startsWith('7')) {
-        clean = clean.substring(1);
-    }
-    
-    // Оставляем только 10 цифр
-    if (clean.length === 10) {
-        return `+7 (${clean.slice(0,3)}) ${clean.slice(3,6)}-${clean.slice(6,8)}-${clean.slice(8,10)}`;
-    }
-    
-    return phone;
-}
 
     // ==========================================================================
     // 7. ЛОГИН
@@ -383,7 +372,6 @@ function formatRussianPhone(phone) {
                 return;
             }
 
-            // Валидация email
             if (!validateEmail(regEmail.value)) { 
                 showError(regEmail, safeGetElement('reg-email-error'), 'Введите корректный email.'); 
                 isRegFormValid = false; 
@@ -391,7 +379,6 @@ function formatRussianPhone(phone) {
                 hideError(regEmail, safeGetElement('reg-email-error')); 
             }
 
-            // Валидация пароля
             if (regPassword.value.length < 4) { 
                 showError(regPassword, safeGetElement('reg-password-error'), 'Пароль должен быть не менее 4 символов.'); 
                 isRegFormValid = false; 
@@ -399,22 +386,19 @@ function formatRussianPhone(phone) {
                 hideError(regPassword, safeGetElement('reg-password-error')); 
             }
 
-            // Валидация телефона - ПРОСТАЯ ВЕРСИЯ
             const phoneValue = regPhone.value.trim();
-                    
             if (phoneValue === '') { 
-                showError(regPhone, safeGetElement('reg-phone-error'), 'Введите номер телефона'); 
+                showError(regPhone, safeGetElement('reg-phone-error'), 'Введите номер телефона.'); 
                 isRegFormValid = false; 
             } else if (!validateRussianPhone(phoneValue)) { 
-                showError(regPhone, safeGetElement('reg-phone-error'), 'Некорректный номер. Пример: +79123456789 или 89123456789'); 
+                showError(regPhone, safeGetElement('reg-phone-error'), 'Введите российский номер телефона. Пример: +7 (912) 345-67-89'); 
                 isRegFormValid = false; 
             } else { 
                 hideError(regPhone, safeGetElement('reg-phone-error'));
-                // Форматируем для красивого отображения
                 const formattedPhone = formatRussianPhone(phoneValue);
                 regPhone.value = formattedPhone;
             }
-            // Валидация даты рождения
+
             const dateValue = regDate.value;
             if (!dateValue) { 
                 showError(regDate, safeGetElement('reg-date-error'), 'Укажите вашу дату рождения.'); 
@@ -440,7 +424,6 @@ function formatRussianPhone(phone) {
                 }
             }
 
-            // Валидация языка
             if (!regLang.value) { 
                 showError(regLang, safeGetElement('reg-lang-error'), 'Выберите язык программирования.'); 
                 isRegFormValid = false; 
@@ -448,7 +431,6 @@ function formatRussianPhone(phone) {
                 hideError(regLang, safeGetElement('reg-lang-error')); 
             }
 
-            // Валидация био
             if (regBio.value.trim() === '') { 
                 showError(regBio, safeGetElement('reg-bio-error'), 'Напишите хотя бы пару слов о себе.'); 
                 isRegFormValid = false; 
@@ -456,7 +438,6 @@ function formatRussianPhone(phone) {
                 hideError(regBio, safeGetElement('reg-bio-error')); 
             }
 
-            // Валидация согласия
             if (!regContract.checked) { 
                 showError(regContract, safeGetElement('reg-contract-error'), 'Вы должны подтвердить согласие с контрактом.'); 
                 isRegFormValid = false; 
@@ -522,8 +503,37 @@ function formatRussianPhone(phone) {
     }
 
     // ==========================================================================
-    // 9. СЕССИЯ И ПРОФИЛЬ
+    // 9. СЕССИЯ, ПРОФИЛЬ И СТАТИСТИКА
     // ==========================================================================
+    
+    async function loadUserStats() {
+        const activeEmail = localStorage.getItem('active_session_email');
+        if (!activeEmail) return;
+        
+        try {
+            const response = await fetch(`api.php?action=get_user_stats&email=${activeEmail}`);
+            const result = await response.json();
+            
+            if (result.success && result.stats) {
+                const stats = result.stats;
+                
+                const tetrisScoreEl = document.getElementById('profile-tetris-score');
+                const tetrisLevelEl = document.getElementById('profile-tetris-level');
+                const tetrisLinesEl = document.getElementById('profile-tetris-lines');
+                const checkersWinsEl = document.getElementById('profile-checkers-wins');
+                const checkersLossesEl = document.getElementById('profile-checkers-losses');
+                
+                if (tetrisScoreEl) tetrisScoreEl.textContent = stats.tetris_score || 0;
+                if (tetrisLevelEl) tetrisLevelEl.textContent = stats.tetris_level || 0;
+                if (tetrisLinesEl) tetrisLinesEl.textContent = stats.tetris_lines || 0;
+                if (checkersWinsEl) checkersWinsEl.textContent = stats.checkers_wins || 0;
+                if (checkersLossesEl) checkersLossesEl.textContent = stats.checkers_losses || 0;
+            }
+        } catch (error) {
+            console.error('Error loading stats:', error);
+        }
+    }
+
     function checkUserSession() {
         const activeEmail = localStorage.getItem('active_session_email');
         const adminMenuLink = safeGetElement('admin-menu-link'); 
@@ -572,6 +582,7 @@ function formatRussianPhone(phone) {
                     profileSection.classList.add('open');
                 }
                 
+                loadUserStats();
                 updateCartUI(); 
                 return;
             }
@@ -681,7 +692,7 @@ function formatRussianPhone(phone) {
         if (!cartContainer || !cartTotalPrice) return;
 
         if (cart.length === 0) {
-            cartContainer.innerHTML = '<p class="empty-cart-text">Корзина пуста. Перейдите в Магазин для покупок.</p>';
+            cartContainer.innerHTML = '<p class="empty-cart-text">Корзина пуста</p>';
             cartTotalPrice.textContent = '0 ₽';
             if (checkoutBtn) checkoutBtn.style.display = 'none';
             return;
@@ -729,7 +740,7 @@ function formatRussianPhone(phone) {
             e.preventDefault();
             const activeEmail = localStorage.getItem('active_session_email');
             if (!activeEmail) {
-                alert('Пожалуйста, войдите в свой профиль GameZ или зарегистрируйтесь, чтобы совершать покупки.');
+                alert('Пожалуйста, войдите в свой профиль GameZ или зарегистрируйтесь.');
                 if (loginModal) loginModal.classList.add('show');
                 return;
             }
@@ -743,7 +754,7 @@ function formatRussianPhone(phone) {
                 cart.push({ id, name, price });
                 localStorage.setItem('gamez_user_cart', JSON.stringify(cart));
                 updateCartUI();
-                alert(`Игра "${name}" добавлена в корзину!`);
+                showToast(`"${name}" добавлено в корзину!`);
             }
         });
     });
@@ -751,7 +762,7 @@ function formatRussianPhone(phone) {
     if (checkoutBtn) {
         checkoutBtn.addEventListener('click', () => {
             const total = cart.reduce((sum, item) => sum + item.price, 0);
-            alert(`✨ Заказ на сумму ${total.toLocaleString()} ₽ успешно оформлен! Спасибо за покупку в магазине GameZ! ✨`);
+            showToast(`Заказ на сумму ${total.toLocaleString()} ₽ успешно оформлен!`);
             cart = [];
             localStorage.setItem('gamez_user_cart', JSON.stringify(cart));
             updateCartUI();
@@ -761,7 +772,7 @@ function formatRussianPhone(phone) {
     // ==========================================================================
     // 12. ПОИСК
     // ==========================================================================
-    const searchInput = safeGetElement('xbox-search');
+    const searchInput = safeGetElement('search-input');
     if (searchInput) {
         searchInput.addEventListener('input', () => {
             const filter = searchInput.value.toLowerCase();
@@ -771,14 +782,55 @@ function formatRussianPhone(phone) {
                 const title = card.querySelector('h3');
                 if (title) {
                     const textValue = title.textContent || title.innerText;
-                    card.style.display = textValue.toLowerCase().indexOf(filter) > -1 ? 'flex' : 'none';
+                    if (textValue.toLowerCase().indexOf(filter) > -1) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
                 }
             });
         });
     }
+    
+    // ==========================================================================
+    // 13. АНИМАЦИЯ КАРТОЧЕК ПРИ СКРОЛЛЕ
+    // ==========================================================================
+    function initScrollAnimations() {
+        const cards = document.querySelectorAll('.card');
+        
+        if ('IntersectionObserver' in window) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { 
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            });
+            
+            cards.forEach(card => {
+                observer.observe(card);
+            });
+        } else {
+            cards.forEach(card => {
+                card.classList.add('visible');
+            });
+        }
+    }
+
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
+    }
                     
     // ==========================================================================
-    // 13. АДМИН-ПАНЕЛЬ
+    // 14. АДМИН-ПАНЕЛЬ (ИСПРАВЛЕННАЯ)
     // ==========================================================================
     const adminEditModal = safeGetElement('admin-edit-modal');
     const adminModalClose = safeGetElement('admin-modal-close');
@@ -798,13 +850,13 @@ function formatRussianPhone(phone) {
             const response = await fetch(`api.php?action=get_users&admin_email=${activeEmail}`);
             
             if (response.status === 403) {
-                tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #e81123; font-weight: bold;">⛔ Доступ заблокирован. У вас нет прав администратора!⛔</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: #e81123;">Доступ запрещён. Нет прав администратора</td></tr>`;
                 return;
             }
             
             const users = await response.json();
             if (!users.length) {
-                tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #666;">📭 База данных SQL пуста</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: #666;">Нет пользователей</td></tr>`;
                 return;
             }
 
@@ -816,77 +868,98 @@ function formatRussianPhone(phone) {
                     if (m === '>') return '&gt;';
                     return m;
                 });
+                
+                const tetrisScore = user.tetris_score || 0;
+                const checkersWins = user.checkers_wins || 0;
+                const checkersLosses = user.checkers_losses || 0;
+                
                 const rowHTML = `
-                    <tr>
-                        <td>${user.id}</td>
-                        <td>${user.email} ${user.role === 'admin' ? '<span style="color:#107c10;">👑 Админ</span>' : ''}</td>
-                        <td>${user.phone}</td>
-                        <td>${user.birth_date}</td>
-                        <td>${user.prog_lang}</td>
-                        <td>${user.gender}</td>
-                        <td>${escapedBio}</td>
-                        <td>
+                    <tr class="admin-row">
+                        <td class="admin-id">${user.id}</td>
+                        <td class="admin-email">${user.email} ${user.role === 'admin' ? '<span style="color:#107c10;"> </span>' : ''}</td>
+                        <td class="admin-phone">${user.phone || '-'}</td>
+                        <td class="admin-birth">${user.birth_date || '-'}</td>
+                        <td class="admin-lang">${user.prog_lang || '-'}</td>
+                        <td class="admin-gender">${user.gender || '-'}</td>
+                        <td class="admin-bio-cell">${escapedBio}</td>
+                        <td class="stats-cell">
+                            <span class="stat-badge">🏆 ${tetrisScore}</span>
+                        </td>
+                        <td class="stats-cell">
+                            <span class="stat-win"> + ${checkersWins}</span>
+                            <span class="stat-loss"> - ${checkersLosses}</span>
+                        </td>
+                        <td class="admin-actions-cell">
                             <button class="admin-edit-btn" 
                                 data-id="${user.id}" 
-                                data-phone="${user.phone.replace(/&/g, '&amp;')}" 
-                                data-date="${user.birth_date}" 
-                                data-lang="${user.prog_lang}" 
-                                data-gender="${user.gender}" 
-                                data-role="${user.role}"
-                                data-bio="${escapedBio}">✏️ Изменить</button>
-                            <button class="admin-delete-btn" data-id="${user.id}" ${user.email === activeEmail ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''}>🗑️ Удалить</button>
+                                data-phone="${(user.phone || '').replace(/&/g, '&amp;')}" 
+                                data-date="${user.birth_date || ''}" 
+                                data-lang="${user.prog_lang || ''}" 
+                                data-gender="${user.gender || ''}" 
+                                data-role="${user.role || 'user'}"
+                                data-bio="${escapedBio}">Изменить</button>
+                            <button class="admin-delete-btn" data-id="${user.id}" ${user.email === activeEmail ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''}> Удалить</button>
                         </td>
-                    </tr>
+                    </table>
                 `;
                 tableBody.insertAdjacentHTML('beforeend', rowHTML);
             });
 
+            // Обработчики кнопок
             document.querySelectorAll('.admin-edit-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const button = e.target;
-                    
-                    const editId = safeGetElement('admin-edit-id');
-                    const editPhone = safeGetElement('admin-edit-phone');
-                    const editDate = safeGetElement('admin-edit-date');
-                    const editLang = safeGetElement('admin-edit-lang');
-                    const editRole = safeGetElement('admin-edit-role');
-                    const editBio = safeGetElement('admin-edit-bio');
-                    
-                    if (editId) editId.value = button.getAttribute('data-id');
-                    if (editPhone) editPhone.value = button.getAttribute('data-phone');
-                    if (editDate) editDate.value = button.getAttribute('data-date');
-                    if (editLang) editLang.value = button.getAttribute('data-lang');
-                    if (editRole) editRole.value = button.getAttribute('data-role');
-                    if (editBio) editBio.value = button.getAttribute('data-bio');
-                    
-                    const genderVal = button.getAttribute('data-gender');
-                    const maleRadio = safeGetElement('admin-gender-male');
-                    const femaleRadio = safeGetElement('admin-gender-female');
-                    if (genderVal === 'Мужской' && maleRadio) maleRadio.checked = true;
-                    else if (femaleRadio) femaleRadio.checked = true;
-
-                    if (adminEditModal) adminEditModal.classList.add('show');
-                });
+                btn.removeEventListener('click', adminEditHandler);
+                btn.addEventListener('click', adminEditHandler);
             });
 
             document.querySelectorAll('.admin-delete-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const id = e.target.getAttribute('data-id');
-                    if (confirm(`⚠️ Удалить геймера с ID ${id} из базы данных SQL? Это действие необратимо!`)) {
-                        try {
-                            const delRes = await fetch(`api.php?action=delete_user&id=${id}&admin_email=${activeEmail}`, { method: 'DELETE' });
-                            const delData = await delRes.json();
-                            alert(delData.message);
-                            loadSqlTable();
-                        } catch (err) { 
-                            alert('Ошибка PHP при удалении.');
-                        }
-                    }
-                });
+                btn.removeEventListener('click', adminDeleteHandler);
+                btn.addEventListener('click', adminDeleteHandler);
             });
 
         } catch (err) {
-            tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #e81123;">🔌 Ошибка связи с PHP бэкендом. Проверьте сервер.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: #e81123;">Ошибка подключения к серверу</td></tr>`;
+        }
+    }
+
+    function adminEditHandler(e) {
+        const button = e.target;
+        
+        const editId = safeGetElement('admin-edit-id');
+        const editPhone = safeGetElement('admin-edit-phone');
+        const editDate = safeGetElement('admin-edit-date');
+        const editLang = safeGetElement('admin-edit-lang');
+        const editRole = safeGetElement('admin-edit-role');
+        const editBio = safeGetElement('admin-edit-bio');
+        
+        if (editId) editId.value = button.getAttribute('data-id');
+        if (editPhone) editPhone.value = button.getAttribute('data-phone');
+        if (editDate) editDate.value = button.getAttribute('data-date');
+        if (editLang) editLang.value = button.getAttribute('data-lang');
+        if (editRole) editRole.value = button.getAttribute('data-role');
+        if (editBio) editBio.value = button.getAttribute('data-bio');
+        
+        const genderVal = button.getAttribute('data-gender');
+        const maleRadio = safeGetElement('admin-gender-male');
+        const femaleRadio = safeGetElement('admin-gender-female');
+        if (genderVal === 'Мужской' && maleRadio) maleRadio.checked = true;
+        else if (femaleRadio) femaleRadio.checked = true;
+
+        if (adminEditModal) adminEditModal.classList.add('show');
+    }
+
+    async function adminDeleteHandler(e) {
+        const id = e.target.getAttribute('data-id');
+        const activeEmail = localStorage.getItem('active_session_email') || '';
+        
+        if (confirm(`Удалить пользователя с ID ${id}?`)) {
+            try {
+                const delRes = await fetch(`api.php?action=delete_user&id=${id}&admin_email=${activeEmail}`, { method: 'DELETE' });
+                const delData = await delRes.json();
+                alert(delData.message);
+                loadSqlTable();
+            } catch (err) { 
+                alert('Ошибка при удалении');
+            }
         }
     }
 
@@ -919,7 +992,7 @@ function formatRussianPhone(phone) {
             };
 
             if (isNaN(updatedData.id) || updatedData.id <= 0) {
-                alert('Ошибка: Не удалось определить корректный ID пользователя для редактирования.');
+                alert('Ошибка: неверный ID пользователя');
                 return;
             }
 
@@ -933,14 +1006,14 @@ function formatRussianPhone(phone) {
                 const data = await response.json();
                 
                 if (response.ok) {
-                    alert('✅ ' + data.message);
+                    alert('+ ' + data.message);
                     if (adminEditModal) adminEditModal.classList.remove('show');
                     loadSqlTable();
                 } else {
-                    alert('❌ Ошибка сервера: ' + (data.message || 'Неизвестная ошибка'));
+                    alert('Ошибка: ' + (data.message || 'Неизвестная ошибка'));
                 }
             } catch (err) {
-                alert('❌ Ошибка сохранения изменений в PHP API! Подробности: ' + err.message);
+                alert('Ошибка сохранения: ' + err.message);
             }
         });
     }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GameZ – Официальный сайт (Демо)</title>
+    <title>GameZ</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -26,17 +26,15 @@
                 <div class="nav-links-left">
                     <a href="#section-consoles" class="scroll-link">Консоли</a>
                     <a href="#section-games" class="scroll-link">Игры</a>
-                    <a href="#section-gamepass" class="scroll-link">Game Pass</a>
-                    <a href="#section-accessories" class="scroll-link">Аксессуары</a>
                     <a href="#section-shop" class="scroll-link">Магазин</a>
                     <a href="#section-admin" class="scroll-link" id="admin-menu-link" style="display: none;">Админка</a>
                 </div>
                 
                 <div class="nav-right">
                     <div class="search-container">
-                        <input type="text" id="xbox-search" class="xbox-search-input" placeholder="Поиск по играм...">
+                        <input type="text" id="search-input" class="search-input" placeholder="Поиск...">
                     </div>
-                    <button id="view-profile-btn" class="profile-btn" style="display: none; margin-right: 15px; margin-top: 0;">Профиль</button>
+                    <button id="view-profile-btn" class="profile-btn" style="display: none;">Профиль</button>
                     <a href="#" class="login-btn" id="main-auth-btn">Войти</a>
                 </div>
             </nav>
@@ -46,12 +44,14 @@
     <!-- БЛОК ЛИЧНОГО КАБИНЕТА С КОРЗИНОЙ -->
     <section id="user-profile-section" class="profile-section">
         <div class="profile-container">
-            <h2>Личный кабинет пользователя GameZ</h2>
+            <h2>Личный кабинет</h2>
             <div class="profile-card-layout">
                 <div class="profile-card">
-                    <div class="profile-avatar">👤</div>
+                    <div class="profile-avatar">
+                        <img class="profile-avatar-img" src=av.jpg alt="Avatar">
+                    </div>
                     <div class="profile-info">
-                        <p><strong>Эл. почта:</strong> <span id="prof-email"></span></p>
+                        <p><strong>Email:</strong> <span id="prof-email"></span></p>
                         <p><strong>Телефон:</strong> <span id="prof-phone"></span></p>
                         <p><strong>Дата рождения:</strong> <span id="prof-date"></span></p>
                         <p><strong>Пол:</strong> <span id="prof-gender"></span></p>
@@ -64,20 +64,47 @@
                             <button id="edit-bio-btn" class="edit-btn">Редактировать</button>
                             <button id="save-bio-btn" class="save-btn" style="display: none;">Сохранить</button>
                         </p>
+                        
+                        <div class="profile-stats">
+                            <h4>Игровая статистика</h4>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <span class="stat-label">Тетрис:</span>
+                                    <span class="stat-value" id="profile-tetris-score">0</span>
+                                    <span class="stat-unit">очков</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Лучший уровень:</span>
+                                    <span class="stat-value" id="profile-tetris-level">0</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Линий собрано:</span>
+                                    <span class="stat-value" id="profile-tetris-lines">0</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Шашки (победы):</span>
+                                    <span class="stat-value" id="profile-checkers-wins">0</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Шашки (поражения):</span>
+                                    <span class="stat-value" id="profile-checkers-losses">0</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="cart-card">
-                    <h3>🛒 Ваша корзина</h3>
+                    <h3>Корзина</h3>
                     <div id="cart-items-container">
-                        <p class="empty-cart-text">Корзина пуста. Перейдите в Магазин для покупок.</p>
+                        <p class="empty-cart-text">Корзина пуста</p>
                     </div>
                     <div class="cart-footer-wrapper">
                         <div class="cart-total-block">
-                            <span>Итого к оплате:</span>
+                            <span>Итого:</span>
                             <strong id="cart-total-price">0 ₽</strong>
                         </div>
-                        <button id="checkout-btn" class="btn checkout-btn" style="width: 100%; display: none;">Оформить заказ</button>
+                        <button id="checkout-btn" class="btn checkout-btn" style="display: none;">Оформить заказ</button>
                     </div>
                 </div>
             </div>
@@ -86,31 +113,30 @@
 
     <!-- СЛАЙДЕР БАННЕРОВ -->
     <section class="slider-container">
-        <div class="slider" id="xbox-slider">
+        <div class="slider" id="main-slider">
             <div class="slide active-slide">
-                <video class="hero-video" autoplay loop muted playsinline poster="https://placehold.co/1920x1080/107c10/white?text=GameZ">
-                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4">
+                <video class="hero-video" autoplay loop muted playsinline poster=Ps5.jpg>
                 </video>
                 <div class="hero-content">
-                    <h1>Мир развлечений GameZ</h1>
-                    <p>Исследуйте новое поколение игр. Оцените невероятную графику, мгновенную загрузку и сотни игровых миров.</p>
-                    <a href="#section-shop" class="btn scroll-link">Купить сейчас</a>
+                    <h1>PlayStation 5</h1>
+                    <p>Модель поддерживает разрешение 4K Ultra HD и использование технологии HDR10+ для повышения насыщенности цветов.</p>
+                    <a href="#section-shop" class="btn scroll-link">В магазин</a>
                 </div>
             </div>
             <div class="slide">
-                <div class="slide-bg-img" style="background-image: url('https://placehold.co/1920x1080/0a0a0a/107c10?text=GameZ+Pass');"></div>
+                <img class="slide-img" src="Nin.jpg" alt="Nintendo Switch">
                 <div class="hero-content">
-                    <h1>GameZ Pass Ultimate</h1>
-                    <p>Играйте в сотни высококачественных игр на консоли и ПК. Новые культовые релизы доступны в первый же день.</p>
-                    <a href="#section-gamepass" class="btn scroll-link">Подробнее</a>
+                    <h1>Nintendo Switch</h1>
+                    <p>консоль Nintendo Switch.</p>
+                    <a href="#section-shop" class="btn scroll-link">Купить</a>
                 </div>
             </div>
             <div class="slide">
-                <div class="slide-bg-img" style="background-image: url('https://placehold.co/1920x1080/0a0a0a/107c10?text=GameZ+Accessories');"></div>
+                <img class="slide-img" src=G.jpg alt="Игры">
                 <div class="hero-content">
-                    <h1>Прокачай свой сетап</h1>
-                    <p>Уникальные беспроводные геймпады, гарнитуры и зарядные станции. Найдите свой идеальный стиль управления.</p>
-                    <a href="#section-accessories" class="btn scroll-link">Смотреть аксессуары</a>
+                    <h1>Коллекция игр</h1>
+                    <p>Огромный выбор игр на любой вкус. От классики до новинок!</p>
+                    <a href="#section-games" class="btn scroll-link">Смотреть игры</a>
                 </div>
             </div>
         </div>
@@ -127,28 +153,56 @@
     <section id="section-consoles" class="page-section">
         <h2 class="tab-title">Игровые консоли нового поколения</h2>
         <div class="products">
-            <div class="card anim-fade visible">
+            <div class="card shop-product-card" data-id="console1" data-name="Nintendo Switch" data-price="39999" data-type="console">
                 <div class="card-img">
-                    <img src="https://placehold.co/600x400/0a0a0a/107c10?text=GameZ+Series+X" alt="GameZ Series X">
+                    <img src=Nin.jpg alt="Nintendo Switch">
                 </div>
                 <div class="card-body">
                     <div>
-                        <h3>GameZ Series X</h3>
-                        <p>Самая быстрая и мощная консоль GameZ в истории с поддержкой истинного разрешения 4K.</p>
+                        <h3>Nintendo Switch</h3>
+                        <p>Протативная консоль, 1TB SSD, трассировкой лучей.</p>
+                        <div class="product-price-tag">39 999 ₽</div>
                     </div>
-                    <span class="card-btn">Подробнее</span>
+                    <button class="card-btn add-to-cart-btn">В корзину</button>
                 </div>
             </div>
-            <div class="card anim-fade visible">
+            <div class="card shop-product-card" data-id="console2" data-name="PlayStation 5" data-price="53000" data-type="console">
                 <div class="card-img">
-                    <img src="https://placehold.co/600x400/0a0a0a/107c10?text=GameZ+Series+S" alt="GameZ Series S">
+                    <img src=Ps5.jpg alt="PlayStation 5">
                 </div>
                 <div class="card-body">
                     <div>
-                        <h3>GameZ Series S</h3>
-                        <p>Полностью цифровая консоль следующего поколения по доступной цене в самом компактном корпусе.</p>
+                        <h3>PlayStation 5</h3>
+                        <p>Модель поддерживает разрешение 4K Ultra HD и использование технологии HDR10+ для повышения насыщенности цветов.</p>
+                        <div class="product-price-tag">53 000 ₽</div>
                     </div>
-                    <span class="card-btn">Подробнее</span>
+                    <button class="card-btn add-to-cart-btn">В корзину</button>
+                </div>
+            </div>
+            <div class="card shop-product-card" data-id="console3" data-name="PlayStation 4" data-price="33000" data-type="console">
+                <div class="card-img">
+                    <img src=Ps4.jpg alt="PlayStation 4">
+                </div>
+                <div class="card-body">
+                    <div>
+                        <h3>PlayStation 4</h3>
+                        <p>игровая приставка восьмого поколения, выпускаемая японской компанией Sony.</p>
+                        <div class="product-price-tag">33 000 ₽</div>
+                    </div>
+                    <button class="card-btn add-to-cart-btn">В корзину</button>
+                </div>
+            </div>
+            <div class="card shop-product-card" data-id="console3" data-name="Xbox Series X" data-price="76000" data-type="console">
+                <div class="card-img">
+                    <img src=XB.jpg alt="Xbox Series X">
+                </div>
+                <div class="card-body">
+                    <div>
+                        <h3>Xbox Series X</h3>
+                        <p>Благодаря процессору AMD Zen 2 с частотой 3.8 ГГц и 16 ГБ оперативной памяти обеспечивается быстродействие системы.</p>
+                        <div class="product-price-tag">76 000 ₽</div>
+                    </div>
+                    <button class="card-btn add-to-cart-btn">В корзину</button>
                 </div>
             </div>
         </div>
@@ -156,80 +210,60 @@
 
     <!-- Раздел: ИГРЫ -->
     <section id="section-games" class="page-section">
-        <h2 class="tab-title">Культовые блокбастеры и новинки</h2>
+        <h2 class="tab-title">Игры</h2>
         <div class="products">
-            <div class="card anim-fade visible">
+            <div class="card shop-product-card" data-id="game1" data-name="Шашки GameZ" data-price="1000" data-type="game">
                 <div class="card-img">
-                    <img src="https://placehold.co/600x400/0a0a0a/107c10?text=Halo+Infinite" alt="Halo Infinite">
+                    <img src=shashki.jpg alt="Шашки">
                 </div>
                 <div class="card-body">
                     <div>
-                        <h3>Halo Infinite</h3>
-                        <p>Станьте величайшим героем человечества и отправляйтесь в масштабное космическое приключение.</p>
+                        <h3>Шашки</h3>
+                        <p>Классическая игра в шашки. Играйте онлайн с друзьями!</p>
+                        <div class="product-price-tag"">1 000 ₽</div>
                     </div>
-                    <span class="card-btn">В магазин</span>
+                    <button class="card-btn add-to-cart-btn">В корзину</button>
+                    <a href="Game/checkers/index.html" class="card-btn" style="margin-top: 10px; text-decoration: none;">Играть</a>
                 </div>
             </div>
-            <div class="card anim-fade visible">
+            <div class="card shop-product-card" data-id="game2" data-name="Тетрис GameZ" data-price="1000" data-type="game">
                 <div class="card-img">
-                    <img src="https://placehold.co/600x400/0a0a0a/107c10?text=Forza+Motorsport" alt="Forza Motorsport">
+                    <img src=Tet.png alt="Тетрис">
                 </div>
                 <div class="card-body">
                     <div>
-                        <h3>Forza Motorsport</h3>
-                        <p>Передовые гоночные симуляторы с динамической сменой времени суток и реалистичной физикой авто.</p>
+                        <h3>Тетрис</h3>
+                        <p>Классическая игра-головоломка. Собирайте линии, ставьте рекорды!</p>
+                        <div class="product-price-tag"">1 000 ₽</div>
                     </div>
-                    <span class="card-btn">Смотреть</span>
+                    <button class="card-btn add-to-cart-btn">В корзину</button>
+                    <a href="Game/tetris/index.html" class="card-btn" style="margin-top: 10px; text-decoration: none;">Играть</a>
                 </div>
             </div>
-            <div class="card anim-fade visible">
+            <div class="card shop-product-card" data-id="game3" data-name="Minecraft" data-price="1999" data-type="game">
                 <div class="card-img">
-                    <img src="https://placehold.co/600x400/0a0a0a/ffd700?text=Checkers" alt="Шашки GameZ">
+                    <img src=Main.jpg alt="Minecraft">
                 </div>
                 <div class="card-body">
                     <div>
-                        <h3>Шашки GameZ</h3>
-                        <p>Классическая игра в шашки с интеллектуальным компьютером. Развивайте стратегию и тактику!</p>
+                        <h3>Minecraft</h3>
+                        <p>компьютерная инди-игра в жанре песочницы, созданная шведским программистом Маркусом Перссоном и выпущенная его студией Mojang AB.</p>
+                        <div class="product-price-tag">1 999 ₽</div>
                     </div>
-                    <a href="Game/checkers/index.html" class="card-btn" style="text-decoration: none; display: inline-block;">🎮 Играть бесплатно</a>
+                    <button class="card-btn add-to-cart-btn">В корзину</button>
                 </div>
             </div>
-        </div>
-    </section>
-
-    <!-- Раздел: GAME PASS -->
-    <section id="section-gamepass" class="page-section">
-        <h2 class="tab-title">Подписка GameZ Pass Ultimate</h2>
-        <div class="products">
-            <div class="card anim-fade visible">
+            <div class="card shop-product-card" data-id="game4" data-name="Elden Ring" data-price="2999" data-type="game">
                 <div class="card-img">
-                    <img src="https://placehold.co/600x400/0a0a0a/107c10?text=GameZ+Pass" alt="GameZ Pass">
+                    <img src=Elden_Ring.jpg alt="Elden Ring">
                 </div>
                 <div class="card-body">
                     <div>
-                        <h3>Каталог GameZ Pass Ultimate</h3>
-                        <p>Сотни высококачественных игр для консоли и ПК, доступных сразу в день релиза за одну подписку.</p>
+                        <h3>Elden Ring</h3>
+                        <p>Станьте повелителем Междуземья в этой эпической RPG.</p>
+                        <div class="product-price-tag">2 999 ₽</div>
                     </div>
-                    <span class="card-btn">Купить подписку</span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Раздел: АКСЕССУАРЫ -->
-    <section id="section-accessories" class="page-section">
-        <h2 class="tab-title">Беспроводные геймпады и гарнитуры</h2>
-        <div class="products">
-            <div class="card anim-fade visible">
-                <div class="card-img">
-                    <img src="https://placehold.co/600x400/0a0a0a/107c10?text=GameZ+Controller" alt="Controllers">
-                </div>
-                <div class="card-body">
-                    <div>
-                        <h3>Геймпады GameZ Wireless</h3>
-                        <p>Оцените текстурированные поверхности, измененную геометрию и гибридную крестовину.</p>
-                    </div>
-                    <span class="card-btn">Выбрать стиль</span>
+                    <button class="card-btn add-to-cart-btn">В корзину</button>
                 </div>
             </div>
         </div>
@@ -237,44 +271,109 @@
 
     <!-- Раздел: МАГАЗИН -->
     <section id="section-shop" class="page-section">
-        <h2 class="tab-title">Цифровой магазин игр GameZ</h2>
+        <h2 class="tab-title">Все товары</h2>
         <div class="products">
-            <div class="card shop-product-card" data-id="1" data-name="Шашки - Классическая стратегия" data-price="0">
+            <div class="card shop-product-card" data-id="console1" data-name="Nintendo Switch" data-price="39999" data-type="console">
                 <div class="card-img">
-                    <img src="https://placehold.co/600x400/0a0a0a/ffd700?text=Checkers" alt="Checkers Game">
+                    <img src=Nin.jpg alt="Nintendo Switch">
                 </div>
                 <div class="card-body">
                     <div>
-                        <h3>Шашки - Классическая стратегия</h3>
-                        <p>Классическая игра в шашки с интеллектуальным компьютерным соперником. Развивайте стратегическое мышление!</p>
-                        <div class="product-price-tag" style="color: #ffd700;">БЕСПЛАТНО!</div>
+                        <h3>Nintendo Switch</h3>
+                        <p>Протативная консоль, 1TB SSD, трассировкой лучей.</p>
+                        <div class="product-price-tag">39 999 ₽</div>
                     </div>
                     <button class="card-btn add-to-cart-btn">В корзину</button>
                 </div>
             </div>
-
-            <div class="card shop-product-card" data-id="2" data-name="Cyberpunk 2077: Phantom Liberty" data-price="1999">
+            <div class="card shop-product-card" data-id="console2" data-name="PlayStation 5" data-price="53000" data-type="console">
                 <div class="card-img">
-                    <img src="https://placehold.co/600x400/0a0a0a/107c10?text=Cyberpunk+2077" alt="Cyberpunk 2077">
+                    <img src=Ps5.jpg alt="PlayStation 5">
                 </div>
                 <div class="card-body">
                     <div>
-                        <h3>Cyberpunk 2077</h3>
-                        <p>Станьте городским наемником в самом опасном мегаполисе будущего — Найт-Сити.</p>
+                        <h3>PlayStation 5</h3>
+                        <p>Модель поддерживает разрешение 4K Ultra HD и использование технологии HDR10+ для повышения насыщенности цветов.</p>
+                        <div class="product-price-tag">53 000 ₽</div>
+                    </div>
+                    <button class="card-btn add-to-cart-btn">В корзину</button>
+                </div>
+            </div>
+            <div class="card shop-product-card" data-id="console3" data-name="PlayStation 4" data-price="33000" data-type="console">
+                <div class="card-img">
+                    <img src=Ps4.jpg alt="PlayStation 4">
+                </div>
+                <div class="card-body">
+                    <div>
+                        <h3>PlayStation 4</h3>
+                        <p>игровая приставка восьмого поколения, выпускаемая японской компанией Sony.</p>
+                        <div class="product-price-tag">33 000 ₽</div>
+                    </div>
+                    <button class="card-btn add-to-cart-btn">В корзину</button>
+                </div>
+            </div>
+            <div class="card shop-product-card" data-id="console3" data-name="Xbox Series X" data-price="76000" data-type="console">
+                <div class="card-img">
+                    <img src=XB.jpg alt="Xbox Series X">
+                </div>
+                <div class="card-body">
+                    <div>
+                        <h3>Xbox Series X</h3>
+                        <p>Благодаря процессору AMD Zen 2 с частотой 3.8 ГГц и 16 ГБ оперативной памяти обеспечивается быстродействие системы.</p>
+                        <div class="product-price-tag">76 000 ₽</div>
+                    </div>
+                    <button class="card-btn add-to-cart-btn">В корзину</button>
+                </div>
+            </div>
+            <div class="card shop-product-card" data-id="game1" data-name="Шашки" data-price="1000" data-type="game">
+                <div class="card-img">
+                    <img src=shashki.jpg alt="Шашки">
+                </div>
+                <div class="card-body">
+                    <div>
+                        <h3>Шашки</h3>
+                        <p>Классические шашки. Играйте с друзьями!</p>
+                        <div class="product-price-tag"">1 000 ₽</div>
+                    </div>
+                    <button class="card-btn add-to-cart-btn">В корзину</button>
+                    <a href="Game/checkers/index.html" class="card-btn" style="margin-top: 10px; text-decoration: none;">Играть</a>
+                </div>
+            </div>
+            <div class="card shop-product-card" data-id="game2" data-name="Тетрис GameZ" data-price="1000" data-type="game">
+                <div class="card-img">
+                    <img src=Tet.png alt="Тетрис">
+                </div>
+                <div class="card-body">
+                    <div>
+                        <h3>Тетрис</h3>
+                        <p>Классический тетрис.</p>
+                        <div class="product-price-tag">1 000 ₽</div>
+                    </div>
+                    <button class="card-btn add-to-cart-btn">В корзину</button>
+                    <a href="Game/tetris/index.html" class="card-btn" style="margin-top: 10px; text-decoration: none;">Играть</a>
+                </div>
+            </div>
+            <div class="card shop-product-card" data-id="game3" data-name="Minecraft" data-price="1999" data-type="game">
+                <div class="card-img">
+                    <img src=Main.jpg alt="Minecraft">
+                </div>
+                <div class="card-body">
+                    <div>
+                        <h3>Minecraft</h3>
+                        <p>компьютерная инди-игра в жанре песочницы, созданная шведским программистом Маркусом Перссоном и выпущенная его студией Mojang AB.</p>
                         <div class="product-price-tag">1 999 ₽</div>
                     </div>
                     <button class="card-btn add-to-cart-btn">В корзину</button>
                 </div>
             </div>
-
-            <div class="card shop-product-card" data-id="3" data-name="Elden Ring: Shadow of the Erdtree" data-price="2999">
+            <div class="card shop-product-card" data-id="game4" data-name="Elden Ring" data-price="2999" data-type="game">
                 <div class="card-img">
-                    <img src="https://placehold.co/600x400/0a0a0a/107c10?text=Elden+Ring" alt="Elden Ring">
+                    <img src=Elden_Ring.jpg alt="Elden Ring">
                 </div>
                 <div class="card-body">
                     <div>
                         <h3>Elden Ring</h3>
-                        <p>Восстаньте, погасшая душа, и направьте силу Кольца Элден, чтобы стать владыкой Междуземья.</p>
+                        <p>Эпическая RPG от создателей Dark Souls.</p>
                         <div class="product-price-tag">2 999 ₽</div>
                     </div>
                     <button class="card-btn add-to-cart-btn">В корзину</button>
@@ -285,7 +384,7 @@
 
     <!-- Раздел: АДМИН-ПАНЕЛЬ -->
     <section id="section-admin" class="page-section" style="display: none;">
-        <h2 class="tab-title">Управление базой данных SQL (SQLite3)</h2>
+        <h2 class="tab-title">Управление базой данных</h2>
         <div class="admin-table-container">
             <table class="admin-table">
                 <thead>
@@ -297,35 +396,35 @@
                         <th>Язык</th>
                         <th>Пол</th>
                         <th>Биография</th>
+                        <th>Тетрис</th>
+                        <th>Шашки</th>
                         <th>Действие</th>
                     </tr>
                 </thead>
                 <tbody id="admin-table-body">
-                    <tr><td colspan="8" style="text-align: center;">Загрузка данных...</td></tr>
+                    <tr><td colspan="10" style="text-align: center;">Загрузка...</td></tr>
                 </tbody>
             </table>
         </div>
     </section>
 
-    <!-- Футер -->
     <footer>
-        <p>© GameZ 2026. Демонстрационный игровой концепт фан-страницы.</p>
+        <p>© GameZ 2026.</p>
     </footer>
 
-    <!-- МОДАЛЬНОЕ ОКНО (ВХОД И РЕГИСТРАЦИЯ) -->
+    <!-- МОДАЛЬНОЕ ОКНО ВХОДА -->
     <div class="modal-overlay" id="login-modal">
         <div class="modal-box">
-            <button class="modal-close" id="modal-close" aria-label="Закрыть">&times;</button>
+            <button class="modal-close" id="modal-close">&times;</button>
             <div class="modal-logo"><div class="logo-icon">Z</div> GameZ</div>
-
+            
             <div id="auth-login-block">
                 <h2>Вход</h2>
-                <p class="modal-subtitle">Используйте учетную запись GameZ Live</p>
-
+                <p class="modal-subtitle">Используйте учетную запись GameZ</p>
                 <form id="login-form" novalidate>
                     <div class="input-group">
                         <input type="email" id="login-email" required placeholder=" ">
-                        <label for="login-email">Эл. почта</label>
+                        <label for="login-email">Email</label>
                         <span class="error-message" id="login-email-error"></span>
                     </div>
                     <div class="input-group">
@@ -334,19 +433,18 @@
                         <span class="password-toggle" id="toggle-login-password">👁</span>
                         <span class="error-message" id="login-password-error"></span>
                     </div>
-                    <div class="modal-links"><a href="#" id="go-to-register">Создать учетную запись GameZ</a></div>
-                    <button type="submit" class="btn modal-submit-btn">Далее</button>
+                    <div class="modal-links"><a href="#" id="go-to-register">Создать аккаунт</a></div>
+                    <button type="submit" class="btn modal-submit-btn">Войти</button>
                 </form>
             </div>
-
+            
             <div id="auth-register-block" style="display: none;">
                 <h2>Регистрация</h2>
-                <p class="modal-subtitle">Заполните анкету игрового профиля</p>
-
+                <p class="modal-subtitle">Заполните анкету</p>
                 <form id="register-form" novalidate>
                     <div class="input-group">
                         <input type="email" id="reg-email" required placeholder=" ">
-                        <label for="reg-email">Адрес почты</label>
+                        <label for="reg-email">Email</label>
                         <span class="error-message" id="reg-email-error"></span>
                     </div>
                     <div class="input-group">
@@ -357,10 +455,8 @@
                     </div>
                     <div class="input-group">
                         <input type="tel" id="reg-phone" required placeholder=" ">
-                        <label for="reg-phone">Номер телефона</label>
-                        <small style="color: #888; font-size: 11px; display: block; margin-top: 5px;">
-                            📱 Пример: +7 (912) 345-67-89
-                        </small>
+                        <label for="reg-phone">Телефон</label>
+                        <small style="color: #888; font-size: 11px; display: block; margin-top: 5px;">Пример: +7 (912) 345-67-89</small>
                         <span class="error-message" id="reg-phone-error"></span>
                     </div>
                     <div class="input-group">
@@ -372,63 +468,47 @@
                         <select id="reg-lang" required>
                             <option value="" disabled selected hidden></option>
                             <option value="JavaScript">JavaScript</option>
-                            <option value="C#">C# / .NET</option>
+                            <option value="C#">C#</option>
                             <option value="Python">Python</option>
                         </select>
                         <label for="reg-lang">Язык программирования</label>
                         <span class="error-message" id="reg-lang-error"></span>
                     </div>
-
                     <div class="radio-group-container">
                         <label class="radio-main-label">Пол:</label>
                         <div class="radio-options">
-                            <div class="radio-item">
-                                <input type="radio" id="gender-male" name="reg-gender" value="Мужской" checked>
-                                <label for="gender-male">Мужской</label>
-                            </div>
-                            <div class="radio-item">
-                                <input type="radio" id="gender-female" name="reg-gender" value="Женский">
-                                <label for="gender-female">Женский</label>
-                            </div>
+                            <div class="radio-item"><input type="radio" id="gender-male" name="reg-gender" value="Мужской" checked><label for="gender-male">М</label></div>
+                            <div class="radio-item"><input type="radio" id="gender-female" name="reg-gender" value="Женский"><label for="gender-female">Ж</label></div>
                         </div>
                     </div>
-
                     <div class="input-group">
                         <textarea id="reg-bio" required placeholder=" " rows="2"></textarea>
-                        <label for="reg-bio">Биография</label>
+                        <label for="reg-bio">О себе</label>
                         <span class="error-message" id="reg-bio-error"></span>
                     </div>
-
                     <div class="checkbox-group">
                         <input type="checkbox" id="reg-contract">
-                        <label for="reg-contract">С контрактом ознакомлен</label>
+                        <label for="reg-contract">Согласен с условиями</label>
                         <span class="error-message" id="reg-contract-error"></span>
                     </div>
-
-                    <div class="modal-links">
-                        <a href="#" id="go-to-login">Уже есть профиль? Войти</a>
-                    </div>
-
-                    <button type="submit" class="btn modal-submit-btn">Создать</button>
+                    <div class="modal-links"><a href="#" id="go-to-login">Уже есть аккаунт? Войти</a></div>
+                    <button type="submit" class="btn modal-submit-btn">Зарегистрироваться</button>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ ДЛЯ АДМИНИСТРАТОРА -->
+    <!-- МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ АДМИНА -->
     <div class="modal-overlay" id="admin-edit-modal">
         <div class="modal-box">
             <button class="modal-close" id="admin-modal-close">&times;</button>
-            <div class="modal-logo"><div class="logo-icon">Z</div> GameZ Admin</div>
+            <div class="modal-logo"><div class="logo-icon">Z</div> Админ</div>
             <h2>Редактирование профиля</h2>
-            <p class="modal-subtitle">Изменение данных в базе SQLite3</p>
-
             <form id="admin-edit-form" novalidate>
                 <input type="hidden" id="admin-edit-id">
-                
                 <div class="input-group">
                     <input type="tel" id="admin-edit-phone" required placeholder=" ">
-                    <label for="admin-edit-phone">Номер телефона</label>
+                    <label for="admin-edit-phone">Телефон</label>
                 </div>
                 <div class="input-group">
                     <input type="date" id="admin-edit-date" required>
@@ -437,36 +517,34 @@
                 <div class="input-group">
                     <select id="admin-edit-lang" required>
                         <option value="JavaScript">JavaScript</option>
-                        <option value="C#">C# / .NET</option>
+                        <option value="C#">C#</option>
                         <option value="Python">Python</option>
                     </select>
-                    <label for="admin-edit-lang">Язык программирования</label>
+                    <label for="admin-edit-lang">Язык</label>
                 </div>
                 <div class="input-group">
                     <select id="admin-edit-role" required>
-                        <option value="user">User (Игрок)</option>
-                        <option value="admin">Admin (Администратор)</option>
+                        <option value="user">Игрок</option>
+                        <option value="admin">Админ</option>
                     </select>
-                    <label for="admin-edit-role">Роль пользователя</label>
+                    <label for="admin-edit-role">Роль</label>
                 </div>
                 <div class="radio-group-container">
                     <label class="radio-main-label">Пол:</label>
                     <div class="radio-options">
-                        <div class="radio-item"><input type="radio" id="admin-gender-male" name="admin-gender" value="Мужской"><label for="admin-gender-male">Мужской</label></div>
-                        <div class="radio-item"><input type="radio" id="admin-gender-female" name="admin-gender" value="Женский"><label for="admin-gender-female">Женский</label></div>
+                        <div class="radio-item"><input type="radio" id="admin-gender-male" name="admin-gender" value="Мужской"><label for="admin-gender-male">М</label></div>
+                        <div class="radio-item"><input type="radio" id="admin-gender-female" name="admin-gender" value="Женский"><label for="admin-gender-female">Ж</label></div>
                     </div>
                 </div>
                 <div class="input-group">
                     <textarea id="admin-edit-bio" required placeholder=" " rows="2"></textarea>
                     <label for="admin-edit-bio">Биография</label>
                 </div>
-
                 <button type="submit" class="btn modal-submit-btn">Сохранить</button>
             </form>
         </div>
     </div>
 
-    <script src="game.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
