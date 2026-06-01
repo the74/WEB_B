@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // ПУТЬ К БАЗЕ ДАННЫХ: Файл базы данных SQL в папке вашего проекта
-$dbPath = __DIR__ . DIRECTORY_SEPARATOR . 'gamez_store.db';
+$dbPath = '/home/u82458/www/w3/gamez_store.db';
 
 try {
     $db = new SQLite3($dbPath);
